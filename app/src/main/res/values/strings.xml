@@ -92,5 +92,12 @@
     <string name="cover_none_found">Nothing found. Try editing the title.</string>
     <string name="cover_search_failed">Search failed. Check your connection.</string>
     <string name="cover_reset">Restore original</string>
+    <string name="visualizer">Visualizer</string>
+    <string name="viz_cover">Cover</string>
+    <string name="viz_wave">Waves</string>
+    <string name="viz_stereo">Stereoscope</string>
+    <string name="viz_spectrum">Spectrum</string>
+    <string name="viz_aura">Aura</string>
+    <string name="viz_silk">Silk</string>
     <string name="sign_out">Sign out</string>
 </resources>

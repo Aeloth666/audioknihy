@@ -31,6 +31,16 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import cz.audioknihy.ui.CoverWithRibbon
+import cz.audioknihy.viz.VizMode
+import cz.audioknihy.viz.Visualizer
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.DisposableEffect
+import cz.audioknihy.ui.CoverZoomDialog
 import cz.audioknihy.ui.rememberCoverUrl
 import cz.audioknihy.ui.Ribbon
 import cz.audioknihy.ui.theme.Silk
@@ -88,6 +98,20 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
             navigationIcon = {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
             },
+            actions = {
+                var vizMenu by remember { mutableStateOf(false) }
+                val current by vm.viz.collectAsStateWithLifecycle()
+                IconButton(onClick = { vizMenu = true }) { Icon(Icons.Filled.GraphicEq, stringResource(R.string.visualizer)) }
+                DropdownMenu(expanded = vizMenu, onDismissRequest = { vizMenu = false }) {
+                    VizMode.entries.forEach { m ->
+                        DropdownMenuItem(
+                            text = { Text(stringResource(m.label)) },
+                            onClick = { vizMenu = false; vm.setViz(m) },
+                            trailingIcon = { if (m == current) Icon(Icons.Filled.Check, null) },
+                        )
+                    }
+                }
+            },
         )
     }) { pad ->
         if (book == null) return@Scaffold
@@ -101,11 +125,26 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
         ) {
             val silk = Silk.forBook(book.id)
             val bookFraction = if (book.durationMs > 0) s.bookPositionMs.toFloat() / book.durationMs else 0f
-            CoverWithRibbon(
-                url = rememberCoverUrl(book, 800),
+            val coverUrl = rememberCoverUrl(book, 800)
+            var zoom by remember { mutableStateOf(false) }
+            if (zoom) CoverZoomDialog(coverUrl) { zoom = false }
+            val vizMode by vm.viz.collectAsStateWithLifecycle()
+            val side = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp * 0.86f).dp
+            DisposableEffect(vizMode) {
+                vm.tap.enabled = vizMode != VizMode.COVER
+                onDispose { vm.tap.enabled = false }
+            }
+            if (vizMode != VizMode.COVER) Visualizer(
+                mode = vizMode, tap = vm.tap, color = silk, coverUrl = coverUrl, playing = s.isPlaying,
+                modifier = Modifier.padding(top = 12.dp).size(side).clickable { zoom = true },
+            ) else CoverWithRibbon(
+                onClick = { zoom = true },
+                maxHeight = 340.dp,
+                width = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp * 0.82f).dp,
+                url = coverUrl,
                 fraction = bookFraction,
                 color = silk,
-                modifier = Modifier.padding(top = 12.dp).fillMaxWidth(0.82f).aspectRatio(1f),
+                modifier = Modifier.padding(top = 12.dp),
                 description = stringResource(R.string.progress_percent, (bookFraction * 100).toInt()),
             )
             Text(book.title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)

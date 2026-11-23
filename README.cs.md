@@ -1,3 +1,5 @@
+<img src="art/icon-512.png" width="112" align="right" alt="">
+
 # Audioknihy – přehrávač audioknih pro Plex
 
 🇬🇧 [English version](README.md)
@@ -15,6 +17,7 @@ Dělaný na poslech v posteli, v autě i doma: tmavý vzhled, velká tlačítka,
 - **Kapitoly** – vložené kapitoly souborů M4A/M4B (Nero `chpl`), jinak soubor = kapitola.
 - **Přehrávač** – skok zpět/vpřed (nastavitelný), předchozí/další kapitola, rychlost 0,5×–3,0×.
 - **Časovač vypnutí** – 15/30/45/60 min nebo do konce kapitoly, na konci ztlumí, zatřesením telefonu se prodlouží.
+- **Vizualizace** – Vlny, Stereoskop (u mono audioknih fázový obrazec), Spektrum, Aura (prstenec spektra kolem obalu) a Hedvábí. Zvuk se bere přímo z přehrávače, bez oprávnění k mikrofonu.
 - **Obaly** – obal z Plexu; když chybí, aplikace ho dohledá na Apple Books (český obchod), Google Books a Open Library, jinak použije obrázek autora. Obal můžete najít i ručně (⋮ → Najít obal).
 - **Označit jako dokončené / nepřehrané** – promítne se i do Plexu.
 - **Synchronizace s Plexem** – pozice se hlásí i do Plexu (při výpadku sítě se pošle později). Knihy rozposlouchané v Plexampu se po prvním přihlášení objeví v Rozposlouchaných.

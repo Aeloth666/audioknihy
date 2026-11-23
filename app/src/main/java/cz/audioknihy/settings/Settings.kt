@@ -32,6 +32,7 @@ class Settings(context: Context) {
         val sectionKey = stringPreferencesKey("section_key")
         val inProgressSort = stringPreferencesKey("in_progress_sort")
         val theme = stringPreferencesKey("theme")
+        val viz = stringPreferencesKey("visualizer")
     }
 
     val skipBackMs: Flow<Long> = store.data.map { it[K.skipBack] ?: DEFAULT_SKIP_BACK }
@@ -51,6 +52,9 @@ class Settings(context: Context) {
 
     val theme: Flow<String?> = store.data.map { it[K.theme] }
     suspend fun setTheme(v: String) = store.edit { it[K.theme] = v }
+
+    val visualizer: Flow<String?> = store.data.map { it[K.viz] }
+    suspend fun setVisualizer(v: String) = store.edit { it[K.viz] = v }
 
     private val prefs = context.applicationContext.getSharedPreferences("device", Context.MODE_PRIVATE)
 

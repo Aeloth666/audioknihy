@@ -15,6 +15,7 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.navigationBarsPadding
 import cz.audioknihy.ui.CoverWithRibbon
 import cz.audioknihy.ui.rememberCoverUrl
@@ -48,7 +49,7 @@ fun MiniPlayer(onOpen: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
                 .padding(horizontal = 12.dp, vertical = 8.dp).height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            CoverWithRibbon(rememberCoverUrl(book, 200), fraction, Silk.forBook(book.id), Modifier.size(52.dp))
+            CoverWithRibbon(rememberCoverUrl(book, 200), fraction, Silk.forBook(book.id), Modifier, width = 48.dp, maxHeight = 64.dp)
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(book.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium)
                 Text(s.chapter?.title.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)

@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package cz.audioknihy.playback
 
 import android.content.Context
@@ -8,12 +10,46 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
+import androidx.media3.exoplayer.audio.TeeAudioProcessor
+import cz.audioknihy.viz.AudioTap
+import java.nio.ByteBuffer
 
 /** [PlayerFacade] nad ExoPlayerem. Volat jen z hlavního vlákna. */
 class ExoPlayerFacade(context: Context) : PlayerFacade {
 
-    val exo: ExoPlayer = ExoPlayer.Builder(context.applicationContext)
+    /** Odbočka zvuku pro vizualizace (bez oprávnění k mikrofonu). */
+    val tap = AudioTap(2048).apply { enabled = false }
+
+    private val renderers = object : DefaultRenderersFactory(context.applicationContext) {
+        override fun buildAudioSink(
+            context: Context,
+            enableFloatOutput: Boolean,
+            enableAudioTrackPlaybackParams: Boolean,
+        ): AudioSink = DefaultAudioSink.Builder(context)
+            .setAudioProcessorChain(
+                DefaultAudioSink.DefaultAudioProcessorChain(
+                    TeeAudioProcessor(object : TeeAudioProcessor.AudioBufferSink {
+                        @Volatile private var pcm16 = true
+                        override fun flush(sampleRateHz: Int, channelCount: Int, encoding: Int) {
+                            pcm16 = encoding == C.ENCODING_PCM_16BIT
+                            tap.onFormat(sampleRateHz, channelCount)
+                        }
+                        override fun handleBuffer(buffer: ByteBuffer) {
+                            if (pcm16) tap.onPcm16(buffer)
+                        }
+                    })
+                )
+            )
+            .setEnableFloatOutput(enableFloatOutput)
+            .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+            .build()
+    }
+
+    val exo: ExoPlayer = ExoPlayer.Builder(context.applicationContext, renderers)
         .setAudioAttributes(
             AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_SPEECH).build(),
             /* handleAudioFocus = */ true,

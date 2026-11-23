@@ -4,7 +4,12 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.runtime.Composable
@@ -30,14 +35,42 @@ fun CoverWithRibbon(
     color: Color,
     modifier: Modifier = Modifier,
     description: String? = null,
+    /** Šířka obalu; výška se dopočítá z poměru stran obrázku (nejvýš [maxHeight]). */
+    width: Dp = 88.dp,
+    maxHeight: Dp = Dp.Infinity,
+    onClick: (() -> Unit)? = null,
 ) {
     val f by animateFloatAsState(
         targetValue = fraction.coerceIn(0f, 1f),
         animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow),
         label = "coverRibbon",
     )
-    androidx.compose.foundation.layout.Box(modifier.semantics { if (description != null) contentDescription = description }) {
-        Cover(url, Modifier.matchParentSizeCompat())
+    val painter = coil.compose.rememberAsyncImagePainter(url)
+    val state = painter.state
+    val aspect = (state as? coil.compose.AsyncImagePainter.State.Success)?.painter?.intrinsicSize
+        ?.takeIf { it.width > 0f && it.height > 0f }?.let { it.width / it.height }?.coerceIn(0.5f, 1.6f) ?: 1f
+    androidx.compose.foundation.layout.Box(modifier) {
+        var w = width
+        var h = w / aspect
+        if (h > maxHeight) {
+            h = maxHeight
+            w = h * aspect
+        }
+    androidx.compose.foundation.layout.Box(
+        Modifier.size(w, h)
+            .semantics { if (description != null) contentDescription = description }
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+    ) {
+        // Obrázek se vykresluje vždy (jinak by se nezačal načítat); zástupce leží nad ním do načtení.
+        androidx.compose.foundation.Image(
+            painter = painter,
+            contentDescription = null,
+            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+            modifier = Modifier.fillMaxSize().clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)),
+        )
+        if (url == null || state !is coil.compose.AsyncImagePainter.State.Success) {
+            Cover(null, Modifier.fillMaxSize())
+        }
         if (f > 0f) {
             Canvas(Modifier.matchParentSizeCompat()) {
                 val w = (size.width * 0.12f).coerceIn(6.dp.toPx(), 20.dp.toPx())
@@ -72,6 +105,28 @@ fun CoverWithRibbon(
                     strokeWidth = 1.dp.toPx(),
                 )
             }
+        }
+    }
+    }
+}
+
+/** Obal přes celou obrazovku; klepnutím se zavře. */
+@Composable
+fun CoverZoomDialog(url: String?, onDismiss: () -> Unit) {
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.foundation.layout.Box(
+            Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.92f)).clickable(onClick = onDismiss),
+            contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) {
+            coil.compose.AsyncImage(
+                model = url,
+                contentDescription = null,
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+            )
         }
     }
 }

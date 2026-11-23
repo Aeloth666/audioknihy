@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AssistChip
@@ -150,7 +151,9 @@ private fun InProgressList(vm: HomeViewModel, onPlay: (Book) -> Unit, onOpenBook
                         url = rememberCoverUrl(row.book, 300),
                         fraction = row.fraction,
                         color = silk,
-                        modifier = Modifier.padding(end = 14.dp).size(88.dp),
+                        modifier = Modifier.padding(end = 14.dp),
+                        width = 84.dp,
+                        maxHeight = 124.dp,
                         description = stringResource(R.string.progress_percent, (row.fraction * 100).toInt()),
                     )
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -284,7 +287,7 @@ private fun LibraryList(vm: HomeViewModel, onOpenBook: (String) -> Unit) {
                                 .height(IntrinsicSize.Min),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            CoverWithRibbon(rememberCoverUrl(book, 200), f, Silk.forBook(book.id), Modifier.padding(end = 12.dp).size(56.dp))
+                            CoverWithRibbon(rememberCoverUrl(book, 200), f, Silk.forBook(book.id), Modifier.padding(end = 12.dp), width = 54.dp, maxHeight = 80.dp)
                             Column(Modifier.weight(1f)) {
                                 Text(book.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 Text(

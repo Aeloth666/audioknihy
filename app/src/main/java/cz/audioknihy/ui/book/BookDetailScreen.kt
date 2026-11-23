@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.filled.PlayArrow
 import cz.audioknihy.ui.CoverWithRibbon
+import cz.audioknihy.ui.CoverZoomDialog
 import cz.audioknihy.ui.rememberCoverUrl
 import cz.audioknihy.ui.Ribbon
 import cz.audioknihy.ui.theme.Silk
@@ -144,7 +145,13 @@ fun BookDetailScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit, vm: BookDetai
                     else (b.files.take(p.fileIndex).sumOf { it.durationMs } + p.positionMs).toFloat() / b.durationMs
                 } ?: 0f
                 Row(Modifier.padding(16.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CoverWithRibbon(rememberCoverUrl(b), bookFraction, Silk.forBook(b.id), Modifier.padding(end = 4.dp).size(132.dp))
+                    val coverUrl = rememberCoverUrl(b)
+                    var zoom by remember { mutableStateOf(false) }
+                    if (zoom) CoverZoomDialog(coverUrl) { zoom = false }
+                    CoverWithRibbon(
+                        coverUrl, bookFraction, Silk.forBook(b.id), Modifier.padding(end = 4.dp), width = 124.dp,
+                        maxHeight = 186.dp, onClick = { zoom = true },
+                    )
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(b.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                         Text(durationText(b.durationMs), style = MaterialTheme.typography.bodyMedium)

@@ -93,5 +93,12 @@
     <string name="cover_none_found">Nic nenalezeno. Zkuste upravit název.</string>
     <string name="cover_search_failed">Hledání se nepovedlo. Zkontrolujte připojení.</string>
     <string name="cover_reset">Vrátit původní</string>
+    <string name="visualizer">Vizualizace</string>
+    <string name="viz_cover">Obal</string>
+    <string name="viz_wave">Vlny</string>
+    <string name="viz_stereo">Stereoskop</string>
+    <string name="viz_spectrum">Spektrum</string>
+    <string name="viz_aura">Aura</string>
+    <string name="viz_silk">Hedvábí</string>
     <string name="sign_out">Odhlásit</string>
 </resources>

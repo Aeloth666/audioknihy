@@ -19,8 +19,14 @@ import javax.inject.Inject
 class PlayerViewModel @Inject constructor(
     private val session: BookSession,
     private val server: ServerSession,
-    settings: Settings,
+    private val settings: Settings,
+    facade: cz.audioknihy.playback.ExoPlayerFacade,
 ) : ViewModel() {
+    val tap = facade.tap
+    val viz: StateFlow<cz.audioknihy.viz.VizMode> = settings.visualizer.map { cz.audioknihy.viz.VizMode.from(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, cz.audioknihy.viz.VizMode.COVER)
+    fun setViz(m: cz.audioknihy.viz.VizMode) = viewModelScope.launch { settings.setVisualizer(m.name) }
+
     val skipBackSec: StateFlow<Int> = settings.skipBackMs.map { (it / 1000).toInt() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, (Settings.DEFAULT_SKIP_BACK / 1000).toInt())
     val skipForwardSec: StateFlow<Int> = settings.skipForwardMs.map { (it / 1000).toInt() }
