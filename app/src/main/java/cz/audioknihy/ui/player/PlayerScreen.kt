@@ -31,6 +31,11 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
 import cz.audioknihy.ui.CoverWithRibbon
+import cz.audioknihy.ui.theme.AppDesign
+import cz.audioknihy.ui.theme.LocalDesign
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.clip
 import cz.audioknihy.viz.VizMode
 import cz.audioknihy.viz.Visualizer
 import androidx.compose.foundation.clickable
@@ -91,9 +96,33 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
     val book = s.book
     var speedDialog by remember { mutableStateOf(false) }
     var sleepDialog by remember { mutableStateOf(false) }
+    val design = LocalDesign.current
+    val bgUrl = book?.let { rememberCoverUrl(it, 600) }
 
-    Scaffold(topBar = {
+    Box(Modifier.fillMaxSize()) {
+    // Police: obal knihy přes celé pozadí, ztmavený, aby text zůstal čitelný
+    if (design == AppDesign.SHELF && bgUrl != null) {
+        coil.compose.AsyncImage(
+            model = bgUrl,
+            contentDescription = null,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            alpha = 0.5f,
+            modifier = Modifier.fillMaxSize(),
+        )
+        Box(
+            Modifier.fillMaxSize().background(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    0f to MaterialTheme.colorScheme.background.copy(alpha = 0.55f),
+                    0.45f to MaterialTheme.colorScheme.background.copy(alpha = 0.75f),
+                    1f to MaterialTheme.colorScheme.background,
+                )
+            )
+        )
+    }
+    Scaffold(containerColor = if (design == AppDesign.SHELF) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.background, topBar = {
         TopAppBar(
+            colors = if (design == AppDesign.SHELF) androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+            else androidx.compose.material3.TopAppBarDefaults.topAppBarColors(),
             title = { Text(book?.author.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis) },
             navigationIcon = {
                 IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) }
@@ -134,7 +163,24 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
                 vm.tap.enabled = vizMode != VizMode.COVER
                 onDispose { vm.tap.enabled = false }
             }
-            if (vizMode != VizMode.COVER) Visualizer(
+            if (vizMode == VizMode.COVER && design == AppDesign.COMPACT) {
+                // Kompakt: místo obalu velký zbývající čas a široká stužka průběhu
+                Text(
+                    remainingText(book.durationMs - s.bookPositionMs),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 32.dp),
+                )
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { bookFraction },
+                    color = silk,
+                    trackColor = MaterialTheme.colorScheme.outlineVariant,
+                    gapSize = 0.dp,
+                    drawStopIndicator = {},
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp).height(10.dp)
+                        .clip(androidx.compose.foundation.shape.RoundedCornerShape(5.dp)),
+                )
+            } else if (vizMode != VizMode.COVER) Visualizer(
                 mode = vizMode, tap = vm.tap, color = silk, coverUrl = coverUrl, playing = s.isPlaying,
                 modifier = Modifier.padding(top = 12.dp).size(side).clickable { zoom = true },
             ) else CoverWithRibbon(
@@ -229,6 +275,7 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
         }
     }
 
+    }
     if (speedDialog) SpeedDialog(s.speed, onPick = { vm.setSpeed(it) }, onDismiss = { speedDialog = false })
     if (sleepDialog) SleepDialog(
         active = sleep != null,

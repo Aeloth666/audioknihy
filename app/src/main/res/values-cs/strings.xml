@@ -100,5 +100,12 @@
     <string name="viz_spectrum">Spektrum</string>
     <string name="viz_aura">Aura</string>
     <string name="viz_silk">Hedvábí</string>
+    <string name="settings_design">Rozvržení</string>
+    <string name="design_ribbon">Stužka</string>
+    <string name="design_ribbon_desc">Seznam s obaly a stužkami-záložkami</string>
+    <string name="design_shelf">Police</string>
+    <string name="design_shelf_desc">Velké obaly v mřížce, knihovna jako police, přehrávač s obalem v pozadí</string>
+    <string name="design_compact">Kompakt</string>
+    <string name="design_compact_desc">Jen text a tenké linky, velké písmo – do auta a do tmy</string>
     <string name="sign_out">Odhlásit</string>
 </resources>

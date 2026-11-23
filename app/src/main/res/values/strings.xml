@@ -99,5 +99,12 @@
     <string name="viz_spectrum">Spectrum</string>
     <string name="viz_aura">Aura</string>
     <string name="viz_silk">Silk</string>
+    <string name="settings_design">Layout</string>
+    <string name="design_ribbon">Ribbon</string>
+    <string name="design_ribbon_desc">List with covers and bookmark ribbons</string>
+    <string name="design_shelf">Shelf</string>
+    <string name="design_shelf_desc">Large covers in a grid, library as shelves, player with the cover as background</string>
+    <string name="design_compact">Compact</string>
+    <string name="design_compact_desc">Text and thin lines only, large type – for the car and the dark</string>
     <string name="sign_out">Sign out</string>
 </resources>

@@ -17,6 +17,8 @@ import cz.audioknihy.ui.CoverWithRibbon
 import cz.audioknihy.ui.rememberCoverUrl
 import cz.audioknihy.ui.Ribbon
 import cz.audioknihy.ui.theme.Silk
+import cz.audioknihy.ui.theme.AppDesign
+import cz.audioknihy.ui.theme.LocalDesign
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -115,8 +117,18 @@ fun HomeScreen(
             }
             if (refreshing) LinearProgressIndicator(Modifier.fillMaxWidth())
             when (tab) {
-                0 -> InProgressList(vm, onPlay = { vm.play(it); onOpenPlayer() }, onOpenBook = onOpenBook)
-                else -> LibraryList(vm, onOpenBook = onOpenBook)
+                0 -> {
+                    val onPlay: (Book) -> Unit = { vm.play(it); onOpenPlayer() }
+                    when (LocalDesign.current) {
+                        AppDesign.SHELF -> InProgressShelf(vm, onPlay, onOpenBook)
+                        AppDesign.COMPACT -> InProgressCompact(vm, onPlay, onOpenBook)
+                        AppDesign.RIBBON -> InProgressList(vm, onPlay, onOpenBook)
+                    }
+                }
+                else -> when (LocalDesign.current) {
+                    AppDesign.SHELF -> LibraryShelf(vm, onOpenBook)
+                    else -> LibraryList(vm, onOpenBook = onOpenBook, covers = LocalDesign.current != AppDesign.COMPACT)
+                }
             }
         }
     }
@@ -191,7 +203,7 @@ private fun InProgressList(vm: HomeViewModel, onPlay: (Book) -> Unit, onOpenBook
 }
 
 @Composable
-private fun SortBar(sort: InProgressSort, onPick: (InProgressSort) -> Unit) {
+internal fun SortBar(sort: InProgressSort, onPick: (InProgressSort) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val labels = mapOf(
         InProgressSort.RECENT to R.string.sort_recent,
@@ -220,7 +232,7 @@ private fun SortBar(sort: InProgressSort, onPick: (InProgressSort) -> Unit) {
 }
 
 @Composable
-private fun LibraryList(vm: HomeViewModel, onOpenBook: (String) -> Unit) {
+private fun LibraryList(vm: HomeViewModel, onOpenBook: (String) -> Unit, covers: Boolean = true) {
     val books by vm.libraryBooks.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val progress by vm.progressById.collectAsStateWithLifecycle()
@@ -287,7 +299,7 @@ private fun LibraryList(vm: HomeViewModel, onOpenBook: (String) -> Unit) {
                                 .height(IntrinsicSize.Min),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            CoverWithRibbon(rememberCoverUrl(book, 200), f, Silk.forBook(book.id), Modifier.padding(end = 12.dp), width = 54.dp, maxHeight = 80.dp)
+                            if (covers) CoverWithRibbon(rememberCoverUrl(book, 200), f, Silk.forBook(book.id), Modifier.padding(end = 12.dp), width = 54.dp, maxHeight = 80.dp)
                             Column(Modifier.weight(1f)) {
                                 Text(book.title, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 Text(

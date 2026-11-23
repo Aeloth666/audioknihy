@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import cz.audioknihy.ui.theme.AppTheme
+import cz.audioknihy.ui.theme.AppDesign
 import cz.audioknihy.ui.theme.Silk
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ class SettingsViewModel @Inject constructor(val settings: Settings) : ViewModel(
     fun setRewind(ms: Long) = viewModelScope.launch { settings.setResumeRewindMs(ms) }
     fun setSync(v: Boolean) = viewModelScope.launch { settings.setSyncPositionToServer(v) }
     fun setTheme(t: AppTheme) = viewModelScope.launch { settings.setTheme(t.name) }
+    fun setDesign(d: AppDesign) = viewModelScope.launch { settings.setDesign(d.name) }
     fun signOut(done: () -> Unit) = viewModelScope.launch { settings.signOut(); done() }
 }
 
@@ -67,6 +69,7 @@ fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: SettingsView
     val sync by vm.settings.syncPositionToServer.collectAsState(true)
     val server by vm.settings.serverName.collectAsState(null)
     val themeName by vm.settings.theme.collectAsState(AppTheme.CLOTH.name)
+    val designName by vm.settings.design.collectAsState(AppDesign.RIBBON.name)
     Scaffold(topBar = {
         TopAppBar(
             title = { Text(stringResource(R.string.settings)) },
@@ -77,6 +80,7 @@ fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: SettingsView
             Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            DesignPicker(AppDesign.from(designName), vm::setDesign)
             ThemePicker(AppTheme.from(themeName), vm::setTheme)
             Choice(stringResource(R.string.settings_skip_back), listOf(10, 15, 30, 60), (back / 1000).toInt()) { vm.setSkipBack(it * 1000L) }
             Choice(stringResource(R.string.settings_skip_forward), listOf(15, 30, 60, 90), (fwd / 1000).toInt()) { vm.setSkipForward(it * 1000L) }
@@ -138,6 +142,32 @@ private fun ThemePicker(current: AppTheme, onPick: (AppTheme) -> Unit) {
                         color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 6.dp),
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DesignPicker(current: AppDesign, onPick: (AppDesign) -> Unit) {
+    Column {
+        Text(stringResource(R.string.settings_design), style = MaterialTheme.typography.titleSmall)
+        Column(Modifier.padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            AppDesign.entries.forEach { d ->
+                val selected = d == current
+                Row(
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                        .selectable(selected = selected, role = Role.RadioButton) { onPick(d) }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(d.label), style = MaterialTheme.typography.titleMedium,
+                            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        Text(stringResource(d.description), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
         }

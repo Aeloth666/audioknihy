@@ -44,7 +44,11 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
             }
             AudioknihyTheme(theme) {
-                androidx.compose.runtime.CompositionLocalProvider(LocalCovers provides covers) {
+                val designName by settings.design.collectAsState(initial = cz.audioknihy.ui.theme.AppDesign.RIBBON.name)
+                androidx.compose.runtime.CompositionLocalProvider(
+                    LocalCovers provides covers,
+                    cz.audioknihy.ui.theme.LocalDesign provides cz.audioknihy.ui.theme.AppDesign.from(designName),
+                ) {
                     Surface { AppNav(settings) }
                 }
             }
