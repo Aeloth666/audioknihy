@@ -15,7 +15,7 @@ Built for listening in bed, in the car and at home: dark by default, big control
 - **Chapters** – embedded chapters of M4A/M4B files (Nero `chpl`), otherwise one file = one chapter.
 - **Player** – skip back/forward (configurable), previous/next chapter, speed 0.5×–3.0×.
 - **Sleep timer** – 15/30/45/60 min or end of chapter, fades out at the end, shake the phone to extend.
-- **Covers** – Plex cover; if missing, the app looks it up on Google Books / Open Library, then falls back to the author's picture. You can also search for a cover manually (⋮ → Find cover).
+- **Covers** – Plex cover; if missing, the app looks it up on Apple Books (CZ store), Google Books and Open Library, then falls back to the author's picture. You can also search for a cover manually (⋮ → Find cover).
 - **Mark as finished / unplayed** – synced to Plex as played / unplayed.
 - **Sync with Plex** – positions are also reported to Plex (when the network is down they are sent later). Books you started in Plexamp appear in *In progress* after the first sign-in.
 - **Everywhere** – notification, lock screen, headphone buttons, Android Auto (In progress / Library, chapters on next/previous).
@@ -74,7 +74,7 @@ Design notes: [`docs/superpowers/specs`](docs/superpowers/specs), implementation
 
 ## Privacy
 
-The app talks only to your Plex server and plex.tv (sign-in). For books without a cover it sends the book title and author to Google Books and Open Library. No analytics, no ads.
+The app talks only to your Plex server and plex.tv (sign-in). For books without a cover it sends the book title and author to Apple (iTunes Search), Google Books and Open Library. No analytics, no ads.
 
 ## Credits
 

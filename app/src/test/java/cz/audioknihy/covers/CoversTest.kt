@@ -16,7 +16,7 @@ import org.junit.Test
 class CoverSearchTest {
     private val server = MockWebServer().apply { start() }
     private val base = server.url("/").toString().trimEnd('/')
-    private val search = CoverSearch(OkHttpClient(), googleBase = "$base/g", openLibraryBase = "$base/ol", coversBase = "https://covers.test")
+    private val search = CoverSearch(OkHttpClient(), googleBase = "$base/g", openLibraryBase = "$base/ol", coversBase = "https://covers.test", itunesBase = "$base/it")
 
     @After fun tearDown() = server.shutdown()
 
@@ -47,6 +47,34 @@ class CoverSearchTest {
     }
 
     @Test
+    fun apple_books_czech_store_first_in_high_resolution() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/it/search") && request.requestUrl!!.queryParameter("media") == "ebook" -> MockResponse().setBody(
+                    """{"resultCount":1,"results":[{"trackName":"Mimo obraz","artworkUrl100":"https://is1.mzstatic.com/image/thumb/x/100x100bb.jpg"}]}"""
+                )
+                request.path!!.startsWith("/it/") -> MockResponse().setBody("""{"resultCount":0,"results":[]}""")
+                else -> MockResponse().setResponseCode(500)
+            }
+        }
+        assertEquals("https://is1.mzstatic.com/image/thumb/x/600x600bb.jpg", search.bookCover("Mimo obraz", "Jiří Březina"))
+        val first = server.takeRequest().requestUrl!!
+        assertEquals("cz", first.queryParameter("country"))
+        assertEquals("Mimo obraz Jiří Březina", first.queryParameter("term"))
+    }
+
+    @Test(expected = java.io.IOException::class)
+    fun quota_error_is_transient_not_not_found() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/g/") -> MockResponse().setResponseCode(429)
+                else -> MockResponse().setBody("{}")
+            }
+        }
+        search.bookCover("Neznámá", "Nikdo")
+    }
+
+    @Test
     fun google_books_thumbnail_is_used_and_made_https() = runTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest) = when {
@@ -57,7 +85,7 @@ class CoverSearchTest {
             }
         }
         assertEquals("https://books.google.com/x?id=1&zoom=1", search.bookCover("Duna", "Frank Herbert"))
-        val q = server.takeRequest().requestUrl!!.queryParameter("q")
+        val q = List(server.requestCount) { server.takeRequest() }.first { it.path!!.startsWith("/g/") }.requestUrl!!.queryParameter("q")
         assertEquals("intitle:Duna inauthor:Frank Herbert", q)
     }
 
@@ -88,7 +116,7 @@ class CoverSearchTest {
             listOf("https://g/1", "https://g/2", "https://covers.test/b/id/7-L.jpg", "https://covers.test/b/id/8-L.jpg"),
             search.candidates("Duna", "Frank Herbert"),
         )
-        val q = server.takeRequest().requestUrl!!.queryParameter("q")
+        val q = List(server.requestCount) { server.takeRequest() }.first { it.path!!.startsWith("/g/") }.requestUrl!!.queryParameter("q")
         assertEquals("Duna Frank Herbert", q)
     }
 

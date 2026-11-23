@@ -9,9 +9,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
 
-/** Obaly a fotky autorů z veřejných databází (Google Books, Open Library). */
+/** Obaly a fotky autorů z veřejných databází (Apple Books CZ, Google Books, Open Library). */
 interface OnlineCovers {
-    /** Vrátí URL obalu, null = nenalezeno. Při výpadku sítě vyhodí IOException. */
+    /** Vrátí URL obalu, null = nenalezeno. Při výpadku sítě nebo služby vyhodí IOException. */
     suspend fun bookCover(title: String, author: String): String?
     suspend fun authorPhoto(author: String): String?
     /** Více kandidátů pro ruční výběr obalu. */
@@ -23,66 +23,92 @@ class CoverSearch(
     private val googleBase: String = "https://www.googleapis.com",
     private val openLibraryBase: String = "https://openlibrary.org",
     private val coversBase: String = "https://covers.openlibrary.org",
+    private val itunesBase: String = "https://itunes.apple.com",
 ) : OnlineCovers {
 
     private val mapAdapter = Moshi.Builder().build()
         .adapter<Map<String, Any?>>(Types.newParameterizedType(Map::class.java, String::class.java, Any::class.java))
 
+    /**
+     * Zkouší zdroje postupně. Nenalezeno všude = null (smí se uložit).
+     * Když některý zdroj selhal (síť, limit 429) a nic se nenašlo = IOException (zkusit příště).
+     */
     override suspend fun bookCover(title: String, author: String): String? {
-        google(title, author)?.let { return it }
-        return openLibrary(title, author)
-    }
-
-    private suspend fun google(title: String, author: String): String? {
-        val url = "$googleBase/books/v1/volumes".toHttpUrl().newBuilder()
-            .addQueryParameter("q", "intitle:$title inauthor:$author")
-            .addQueryParameter("maxResults", "5")
-            .addQueryParameter("printType", "books")
-            .build()
-        val json = getJson(url.toString()) ?: return null
-        val items = json["items"] as? List<*> ?: return null
-        for (item in items) {
-            val links = ((item as? Map<*, *>)?.get("volumeInfo") as? Map<*, *>)?.get("imageLinks") as? Map<*, *>
-            val thumb = (links?.get("thumbnail") ?: links?.get("smallThumbnail")) as? String ?: continue
-            return thumb.replace("http://", "https://").replace("&edge=curl", "")
+        var transient: IOException? = null
+        val sources: List<suspend () -> String?> = listOf(
+            { apple(title, author, "ebook").firstOrNull() },
+            { apple(title, author, "audiobook").firstOrNull() },
+            { google("intitle:$title inauthor:$author", 5).firstOrNull() },
+            { openLibrary(title, author, 5).firstOrNull() },
+        )
+        for (source in sources) {
+            try {
+                source()?.let { return it }
+            } catch (e: IOException) {
+                transient = e
+            }
         }
+        transient?.let { throw it }
         return null
-    }
-
-    private suspend fun openLibrary(title: String, author: String): String? {
-        val url = "$openLibraryBase/search.json".toHttpUrl().newBuilder()
-            .addQueryParameter("title", title)
-            .addQueryParameter("author", author)
-            .addQueryParameter("limit", "5")
-            .addQueryParameter("fields", "cover_i,title")
-            .build()
-        val docs = getJson(url.toString())?.get("docs") as? List<*> ?: return null
-        val id = docs.firstNotNullOfOrNull { (it as? Map<*, *>)?.get("cover_i") as? Number } ?: return null
-        return "$coversBase/b/id/${id.toLong()}-L.jpg"
     }
 
     override suspend fun candidates(query: String, author: String?): List<String> {
         val out = mutableListOf<String>()
-        val g = "$googleBase/books/v1/volumes".toHttpUrl().newBuilder()
-            .addQueryParameter("q", listOf(query, author.orEmpty()).filter { it.isNotBlank() }.joinToString(" "))
-            .addQueryParameter("maxResults", "20")
+        val term = listOf(query, author.orEmpty()).filter { it.isNotBlank() }.joinToString(" ")
+        var anyOk = false
+        var failure: IOException? = null
+        suspend fun add(block: suspend () -> List<String>) {
+            try {
+                out += block(); anyOk = true
+            } catch (e: IOException) {
+                failure = e
+            }
+        }
+        add { apple(query, author.orEmpty(), "ebook", limit = 10) }
+        add { apple(query, author.orEmpty(), "audiobook", limit = 10) }
+        add { google(term, 20) }
+        add { openLibrary(query, author, 20) }
+        if (!anyOk) failure?.let { throw it }
+        return out.distinct()
+    }
+
+    /** Apple Books, český obchod: e-knihy i audioknihy; obal ve 600×600. */
+    private suspend fun apple(title: String, author: String, media: String, limit: Int = 5): List<String> {
+        val url = "$itunesBase/search".toHttpUrl().newBuilder()
+            .addQueryParameter("term", listOf(title, author).filter { it.isNotBlank() }.joinToString(" "))
+            .addQueryParameter("media", media)
+            .addQueryParameter("country", "cz")
+            .addQueryParameter("limit", limit.toString())
+            .build()
+        val results = getJson(url.toString())?.get("results") as? List<*> ?: return emptyList()
+        return results.mapNotNull { r ->
+            ((r as? Map<*, *>)?.get("artworkUrl100") as? String)?.replace("100x100bb", "600x600bb")
+        }
+    }
+
+    private suspend fun google(q: String, max: Int): List<String> {
+        val url = "$googleBase/books/v1/volumes".toHttpUrl().newBuilder()
+            .addQueryParameter("q", q)
+            .addQueryParameter("maxResults", max.toString())
             .addQueryParameter("printType", "books")
             .build()
-        (getJson(g.toString())?.get("items") as? List<*>).orEmpty().forEach { item ->
+        val items = getJson(url.toString())?.get("items") as? List<*> ?: return emptyList()
+        return items.mapNotNull { item ->
             val links = ((item as? Map<*, *>)?.get("volumeInfo") as? Map<*, *>)?.get("imageLinks") as? Map<*, *>
             ((links?.get("thumbnail") ?: links?.get("smallThumbnail")) as? String)
-                ?.let { out += it.replace("http://", "https://").replace("&edge=curl", "") }
+                ?.replace("http://", "https://")?.replace("&edge=curl", "")
         }
-        val ol = "$openLibraryBase/search.json".toHttpUrl().newBuilder()
-            .addQueryParameter("title", query)
+    }
+
+    private suspend fun openLibrary(title: String, author: String?, limit: Int): List<String> {
+        val url = "$openLibraryBase/search.json".toHttpUrl().newBuilder()
+            .addQueryParameter("title", title)
             .apply { if (!author.isNullOrBlank()) addQueryParameter("author", author) }
-            .addQueryParameter("limit", "20")
+            .addQueryParameter("limit", limit.toString())
             .addQueryParameter("fields", "cover_i,title")
             .build()
-        (getJson(ol.toString())?.get("docs") as? List<*>).orEmpty().forEach { d ->
-            ((d as? Map<*, *>)?.get("cover_i") as? Number)?.let { out += "$coversBase/b/id/${it.toLong()}-L.jpg" }
-        }
-        return out.distinct()
+        val docs = getJson(url.toString())?.get("docs") as? List<*> ?: return emptyList()
+        return docs.mapNotNull { d -> ((d as? Map<*, *>)?.get("cover_i") as? Number)?.let { "$coversBase/b/id/${it.toLong()}-L.jpg" } }
     }
 
     override suspend fun authorPhoto(author: String): String? {
@@ -95,17 +121,17 @@ class CoverSearch(
         return "$coversBase/a/olid/$key-M.jpg?default=false"
     }
 
-    /** null = služba odpověděla chybou nebo prázdně (nenalezeno); IOException = síť. */
+    /**
+     * null = nenalezeno (404, prázdná nebo nečitelná odpověď).
+     * IOException = síť, překročený limit (429) nebo chyba serveru (5xx): nic neukládat.
+     */
     private suspend fun getJson(url: String): Map<String, Any?>? = withContext(Dispatchers.IO) {
         val req = Request.Builder().url(url).header("User-Agent", "Audioknihy (Android)").build()
         http.newCall(req).execute().use { r ->
+            if (r.code == 429 || r.code >= 500) throw IOException("HTTP ${r.code}")
             if (!r.isSuccessful) return@withContext null
             val body = r.body?.string() ?: return@withContext null
-            try {
-                mapAdapter.fromJson(body)
-            } catch (e: Exception) {
-                if (e is IOException) null else null
-            }
+            runCatching { mapAdapter.fromJson(body) }.getOrNull()
         }
     }
 

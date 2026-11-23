@@ -60,7 +60,7 @@ class Covers(
         }
         book.coverThumb?.let { return plexUrl(it, sizePx) }
         memory[book.id]?.let { return it }
-        val url = cachedOrFetch("book:${book.id}") {
+        val url = cachedOrFetch("book2:${book.id}") {
             CoverSearch.searchVariants(book.title, book.author).firstNotNullOfOrNull { online.bookCover(it, book.author) }
         } ?: book.authorThumb?.let { plexUrl(it, sizePx) }
             ?: cachedOrFetch("author:${book.author}") { online.authorPhoto(book.author) }
