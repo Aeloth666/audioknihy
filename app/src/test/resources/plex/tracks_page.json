@@ -1,0 +1,8 @@
+{"MediaContainer":{"size":2,"totalSize":1200,"offset":0,"Metadata":[
+ {"ratingKey":"101","title":"01","parentTitle":"DUNA","grandparentTitle":"Frank Herbert","index":1,"duration":6268000,
+  "viewOffset":120000,"viewCount":0,"lastViewedAt":1700000000,"thumb":"/library/metadata/101/thumb/1","parentThumb":"/library/metadata/100/thumb/1",
+  "Media":[{"Part":[{"key":"/library/parts/9001/1700000000/file.m4a","file":"/data/AudioKnihy/AudioKnihy/Frank Herbert/01 Duna/01.m4a"}]}]},
+ {"ratingKey":"102","title":"02","parentTitle":"DUNA","grandparentTitle":"Frank Herbert","duration":6000000,
+  "parentThumb":"/library/metadata/100/thumb/1",
+  "Media":[{"Part":[{"key":"/library/parts/9002/1700000000/file.m4a","file":"/data/AudioKnihy/AudioKnihy/Frank Herbert/01 Duna/02.m4a"}]}]}
+]}}

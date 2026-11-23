@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default (English). Czech lives in values-cs. -->
+    <string name="app_name">Audioknihy</string>
+
+    <string name="in_progress">In progress</string>
+    <string name="library">Library</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="refresh">Refresh library</string>
+
+    <string name="login_title">Sign in to Plex</string>
+    <string name="login_explain">Sign in with your Plex account. A browser will open – come back here once you have signed in.</string>
+    <string name="login_button">Sign in with Plex</string>
+    <string name="login_waiting">Waiting for confirmation in the browser…</string>
+    <string name="login_failed">Sign-in failed. Please try again.</string>
+
+    <string name="setup_server">Choose a server</string>
+    <string name="setup_section">Choose your audiobook library</string>
+    <string name="setup_connecting">Connecting…</string>
+    <string name="setup_no_server">No Plex server is linked to this account.</string>
+    <string name="setup_no_connection">Could not connect to the server.</string>
+    <string name="setup_no_sections">The server has no music library.</string>
+    <string name="loading_library">Loading library…</string>
+    <string name="try_again">Try again</string>
+
+    <string name="empty_in_progress">No books in progress yet. Pick one in the Library.</string>
+    <string name="empty_library">The library is empty. Try refreshing it.</string>
+    <string name="server_unreachable">Plex server is not reachable</string>
+    <string name="remaining_hm">%1$d h %2$d min left</string>
+    <string name="remaining_m">%1$d min left</string>
+    <string name="duration_hm">%1$d h %2$d min</string>
+    <string name="part_of">part %1$d/%2$d</string>
+    <string name="chapter_of">ch. %1$d/%2$d</string>
+    <string name="mark_finished">Mark as finished</string>
+    <string name="mark_unfinished">Mark as not finished</string>
+    <string name="sort_by">Sort</string>
+    <string name="sort_recent">Recently played</string>
+    <string name="sort_title">By title</string>
+    <string name="sort_author">By author</string>
+    <string name="sort_least_remaining">Least remaining</string>
+    <string name="sort_most_progress">Most progress</string>
+    <string name="progress_percent">%1$d %% listened</string>
+    <string name="mark_unplayed">Mark as unplayed</string>
+    <string name="finished_badge">Finished</string>
+    <string name="continue_listening">Continue</string>
+    <string name="from_start">From the start</string>
+    <string name="chapters">Chapters</string>
+    <string name="search_hint">Search author or title</string>
+    <string name="expand">Expand</string>
+    <string name="collapse">Collapse</string>
+    <plurals name="books_count">
+        <item quantity="one">%1$d book</item>
+        <item quantity="other">%1$d books</item>
+    </plurals>
+
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="skip_back">Back 15 s</string>
+    <string name="skip_forward">Forward 30 s</string>
+    <string name="skip_back_n">Back %1$d s</string>
+    <string name="skip_forward_n">Forward %1$d s</string>
+    <string name="prev_chapter">Previous chapter</string>
+    <string name="next_chapter">Next chapter</string>
+    <string name="speed">Speed</string>
+    <string name="speed_value">%1$s×</string>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_minutes">%1$d min</string>
+    <string name="sleep_end_of_chapter">End of chapter</string>
+    <string name="sleep_cancel">Cancel timer</string>
+    <string name="sleep_remaining">Stops in %1$s</string>
+    <string name="sleep_eoc_active">Stops at end of chapter</string>
+    <string name="close">Close</string>
+
+    <string name="settings_skip_back">Skip back</string>
+    <string name="settings_skip_forward">Skip forward</string>
+    <string name="settings_resume_rewind">Rewind when resuming after a pause</string>
+    <string name="settings_sync">Also save position to Plex</string>
+    <string name="settings_server">Server: %1$s</string>
+    <string name="seconds">%1$d s</string>
+    <string name="settings_theme">Appearance</string>
+    <string name="theme_cloth">Cloth</string>
+    <string name="theme_midnight">Midnight</string>
+    <string name="theme_oxblood">Oxblood</string>
+    <string name="theme_navy">Night blue</string>
+    <string name="theme_linen">Day</string>
+    <string name="more">More options</string>
+    <string name="search">Search</string>
+    <string name="find_cover">Find cover</string>
+    <string name="cover_query">Book title</string>
+    <string name="cover_author">Author</string>
+    <string name="cover_none_found">Nothing found. Try editing the title.</string>
+    <string name="cover_search_failed">Search failed. Check your connection.</string>
+    <string name="cover_reset">Restore original</string>
+    <string name="sign_out">Sign out</string>
+</resources>

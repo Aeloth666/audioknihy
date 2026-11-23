@@ -1,0 +1,15 @@
+.gradle/
+build/
+**/build/
+local.properties
+keystore.properties
+*.keystore
+*.jks
+*.iml
+.idea/
+.superpowers/
+.kotlin/
+captures/
+Audioknihy.apk
+.impeccable/review/
+.impeccable/mocks/

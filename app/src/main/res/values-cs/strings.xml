@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Audioknihy</string>
+
+    <string name="in_progress">Rozposlouchané</string>
+    <string name="library">Knihovna</string>
+    <string name="settings">Nastavení</string>
+    <string name="back">Zpět</string>
+    <string name="refresh">Obnovit knihovnu</string>
+
+    <string name="login_title">Přihlášení k Plexu</string>
+    <string name="login_explain">Přihlaste se svým účtem Plex. Otevře se prohlížeč – po přihlášení se sem vraťte.</string>
+    <string name="login_button">Přihlásit přes Plex</string>
+    <string name="login_waiting">Čekám na potvrzení v prohlížeči…</string>
+    <string name="login_failed">Přihlášení se nepovedlo. Zkuste to znovu.</string>
+
+    <string name="setup_server">Vyberte server</string>
+    <string name="setup_section">Vyberte knihovnu s audioknihami</string>
+    <string name="setup_connecting">Připojuji se…</string>
+    <string name="setup_no_server">K účtu není připojený žádný Plex server.</string>
+    <string name="setup_no_connection">K serveru se nepodařilo připojit.</string>
+    <string name="setup_no_sections">Na serveru není žádná hudební knihovna.</string>
+    <string name="loading_library">Načítám knihovnu…</string>
+    <string name="try_again">Zkusit znovu</string>
+
+    <string name="empty_in_progress">Zatím nemáte žádnou rozposlouchanou knihu. Vyberte ji v Knihovně.</string>
+    <string name="empty_library">Knihovna je prázdná. Zkuste ji obnovit.</string>
+    <string name="server_unreachable">Server Plex není dostupný</string>
+    <string name="remaining_hm">zbývá %1$d h %2$d min</string>
+    <string name="remaining_m">zbývá %1$d min</string>
+    <string name="duration_hm">%1$d h %2$d min</string>
+    <string name="part_of">část %1$d/%2$d</string>
+    <string name="chapter_of">kap. %1$d/%2$d</string>
+    <string name="mark_finished">Označit jako dokončené</string>
+    <string name="mark_unfinished">Označit jako nedokončené</string>
+    <string name="sort_by">Řadit</string>
+    <string name="sort_recent">Naposledy přehrané</string>
+    <string name="sort_title">Podle názvu</string>
+    <string name="sort_author">Podle autora</string>
+    <string name="sort_least_remaining">Nejméně zbývá</string>
+    <string name="sort_most_progress">Nejvíc rozposlouchané</string>
+    <string name="progress_percent">poslechnuto %1$d %%</string>
+    <string name="mark_unplayed">Označit jako nepřehrané</string>
+    <string name="finished_badge">Dokončeno</string>
+    <string name="continue_listening">Pokračovat</string>
+    <string name="from_start">Od začátku</string>
+    <string name="chapters">Kapitoly</string>
+    <string name="search_hint">Hledat autora nebo název</string>
+    <string name="expand">Rozbalit</string>
+    <string name="collapse">Sbalit</string>
+    <plurals name="books_count">
+        <item quantity="one">%1$d kniha</item>
+        <item quantity="few">%1$d knihy</item>
+        <item quantity="many">%1$d knihy</item>
+        <item quantity="other">%1$d knih</item>
+    </plurals>
+
+    <string name="play">Přehrát</string>
+    <string name="pause">Pozastavit</string>
+    <string name="skip_back">Zpět 15 s</string>
+    <string name="skip_forward">Vpřed 30 s</string>
+    <string name="skip_back_n">Zpět %1$d s</string>
+    <string name="skip_forward_n">Vpřed %1$d s</string>
+    <string name="prev_chapter">Předchozí kapitola</string>
+    <string name="next_chapter">Další kapitola</string>
+    <string name="speed">Rychlost</string>
+    <string name="speed_value">%1$s×</string>
+    <string name="sleep_timer">Časovač vypnutí</string>
+    <string name="sleep_minutes">%1$d min</string>
+    <string name="sleep_end_of_chapter">Do konce kapitoly</string>
+    <string name="sleep_cancel">Zrušit časovač</string>
+    <string name="sleep_remaining">Vypnutí za %1$s</string>
+    <string name="sleep_eoc_active">Vypnutí na konci kapitoly</string>
+    <string name="close">Zavřít</string>
+
+    <string name="settings_skip_back">Skok zpět</string>
+    <string name="settings_skip_forward">Skok vpřed</string>
+    <string name="settings_resume_rewind">Převinutí při pokračování po pauze</string>
+    <string name="settings_sync">Ukládat pozici i do Plexu</string>
+    <string name="settings_server">Server: %1$s</string>
+    <string name="seconds">%1$d s</string>
+    <string name="settings_theme">Vzhled</string>
+    <string name="theme_cloth">Plátno</string>
+    <string name="theme_midnight">Půlnoc</string>
+    <string name="theme_oxblood">Bordó</string>
+    <string name="theme_navy">Noční modř</string>
+    <string name="theme_linen">Den</string>
+    <string name="more">Další možnosti</string>
+    <string name="search">Hledat</string>
+    <string name="find_cover">Najít obal</string>
+    <string name="cover_query">Název knihy</string>
+    <string name="cover_author">Autor</string>
+    <string name="cover_none_found">Nic nenalezeno. Zkuste upravit název.</string>
+    <string name="cover_search_failed">Hledání se nepovedlo. Zkontrolujte připojení.</string>
+    <string name="cover_reset">Vrátit původní</string>
+    <string name="sign_out">Odhlásit</string>
+</resources>
