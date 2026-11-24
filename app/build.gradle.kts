@@ -16,8 +16,8 @@ android {
         applicationId = "cz.audioknihy"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "1.6"
+        versionCode = 8
+        versionName = "1.6.1"
     }
 
     val keystoreProps = Properties().apply {

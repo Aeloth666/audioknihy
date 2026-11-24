@@ -128,7 +128,7 @@ class CoverSearch(
     private suspend fun getJson(url: String): Map<String, Any?>? = withContext(Dispatchers.IO) {
         val req = Request.Builder().url(url).header("User-Agent", "Audioknihy (Android)").build()
         http.newCall(req).execute().use { r ->
-            if (r.code == 429 || r.code >= 500) throw IOException("HTTP ${r.code}")
+            if (r.code == 403 || r.code == 429 || r.code >= 500) throw IOException("HTTP ${r.code}")
             if (!r.isSuccessful) return@withContext null
             val body = r.body?.string() ?: return@withContext null
             runCatching { mapAdapter.fromJson(body) }.getOrNull()

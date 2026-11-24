@@ -64,6 +64,17 @@ class CoverSearchTest {
     }
 
     @Test(expected = java.io.IOException::class)
+    fun apple_rate_limit_403_is_transient() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/it/") -> MockResponse().setResponseCode(403)
+                else -> MockResponse().setBody("{}")
+            }
+        }
+        search.bookCover("Hobit", "Tolkien")
+    }
+
+    @Test(expected = java.io.IOException::class)
     fun quota_error_is_transient_not_not_found() = runTest {
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest) = when {
