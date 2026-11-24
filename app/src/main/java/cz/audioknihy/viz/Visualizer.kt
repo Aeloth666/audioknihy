@@ -244,10 +244,18 @@ private fun DrawScope.drawAura(bands: FloatArray, color: Color, gold: Color, t: 
     val maxLen = 52.dp.toPx()
     val n = bands.size
     val energy = bands.average().toFloat()
-    // záře za obalem podle hlasitosti
+    // záře podle hlasitosti jen KOLEM obalu: uvnitř kruhu obalu je průhledná, obal se nebarví
+    val glowR = inner + maxLen * 1.2f
+    val edge = (inner / glowR).coerceIn(0f, 1f)
     drawCircle(
-        Brush.radialGradient(listOf(color.copy(alpha = 0.25f + energy * 0.5f), Color.Transparent), center = c, radius = inner + maxLen * 1.2f),
-        radius = inner + maxLen * 1.2f, center = c,
+        Brush.radialGradient(
+            0f to Color.Transparent,
+            edge to Color.Transparent,
+            (edge + 0.02f).coerceAtMost(1f) to color.copy(alpha = 0.25f + energy * 0.5f),
+            1f to Color.Transparent,
+            center = c, radius = glowR,
+        ),
+        radius = glowR, center = c,
     )
     rotate(degrees = (t * 6 % 360).toFloat(), pivot = c) {
         val total = n * 2
