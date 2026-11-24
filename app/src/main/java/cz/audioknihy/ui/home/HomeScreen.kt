@@ -111,6 +111,8 @@ fun HomeScreen(
         snackbarHost = { SnackbarHost(snackbar) },
     ) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
+            val update by vm.update.collectAsStateWithLifecycle()
+            cz.audioknihy.ui.UpdateBanner(update, onUpdate = vm::installUpdate, onLater = vm::dismissUpdate)
             TabRow(selectedTabIndex = tab) {
                 Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.in_progress)) })
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.library)) })

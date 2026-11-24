@@ -35,6 +35,9 @@ class Settings(context: Context) {
         val theme = stringPreferencesKey("theme")
         val viz = stringPreferencesKey("visualizer")
         val design = stringPreferencesKey("design")
+        val autoUpdate = booleanPreferencesKey("auto_update")
+        val lastUpdateCheck = longPreferencesKey("last_update_check")
+        val dismissedVersion = stringPreferencesKey("dismissed_version")
     }
 
     val skipBackMs: Flow<Long> = store.data.map { it[K.skipBack] ?: DEFAULT_SKIP_BACK }
@@ -60,6 +63,13 @@ class Settings(context: Context) {
 
     val design: Flow<String?> = store.data.map { it[K.design] }
     suspend fun setDesign(v: String) = store.edit { it[K.design] = v }
+
+    val autoUpdate: Flow<Boolean> = store.data.map { it[K.autoUpdate] ?: true }
+    suspend fun setAutoUpdate(v: Boolean) = store.edit { it[K.autoUpdate] = v }
+    val lastUpdateCheck: Flow<Long> = store.data.map { it[K.lastUpdateCheck] ?: 0L }
+    suspend fun setLastUpdateCheck(v: Long) = store.edit { it[K.lastUpdateCheck] = v }
+    val dismissedVersion: Flow<String?> = store.data.map { it[K.dismissedVersion] }
+    suspend fun setDismissedVersion(v: String) = store.edit { it[K.dismissedVersion] = v }
 
     private val prefs = context.applicationContext.getSharedPreferences("device", Context.MODE_PRIVATE)
 

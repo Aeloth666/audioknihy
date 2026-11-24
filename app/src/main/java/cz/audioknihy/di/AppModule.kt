@@ -101,6 +101,10 @@ object AppModule {
     }
 
     @Provides @Singleton
+    fun updates(@ApplicationContext ctx: Context, http: OkHttpClient, settings: Settings) =
+        cz.audioknihy.update.UpdateManager(ctx, http, settings, cz.audioknihy.update.UpdateChecker(http))
+
+    @Provides @Singleton
     fun sleepTimer() = SleepTimer(System::currentTimeMillis)
 
     @Provides @Singleton

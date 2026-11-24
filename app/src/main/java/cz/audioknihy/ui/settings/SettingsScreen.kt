@@ -51,7 +51,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(val settings: Settings) : ViewModel() {
+class SettingsViewModel @Inject constructor(
+    val settings: Settings,
+    val updates: cz.audioknihy.update.UpdateManager,
+) : ViewModel() {
+    val checking = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val upToDate = kotlinx.coroutines.flow.MutableStateFlow(false)
+    fun setAutoUpdate(v: Boolean) = viewModelScope.launch { settings.setAutoUpdate(v) }
+    fun checkNow() = viewModelScope.launch {
+        checking.value = true
+        upToDate.value = !updates.check(force = true)
+        checking.value = false
+    }
+    fun installUpdate() = viewModelScope.launch { updates.downloadAndInstall() }
     fun setSkipBack(ms: Long) = viewModelScope.launch { settings.setSkipBackMs(ms) }
     fun setSkipForward(ms: Long) = viewModelScope.launch { settings.setSkipForwardMs(ms) }
     fun setRewind(ms: Long) = viewModelScope.launch { settings.setResumeRewindMs(ms) }
@@ -100,6 +112,7 @@ fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, onChangeServer: 
                     modifier = Modifier.padding(top = 4.dp).heightIn(min = 48.dp),
                 ) { Text(stringResource(R.string.change_server)) }
             }
+            UpdateSection(vm)
             OutlinedButton(onClick = { vm.signOut(onSignedOut) }) { Text(stringResource(R.string.sign_out)) }
         }
     }
@@ -180,6 +193,30 @@ private fun DesignPicker(current: AppDesign, onPick: (AppDesign) -> Unit) {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun UpdateSection(vm: SettingsViewModel) {
+    val auto by vm.settings.autoUpdate.collectAsState(true)
+    val checking by vm.checking.collectAsState()
+    val upToDate by vm.upToDate.collectAsState()
+    val state by vm.updates.state.collectAsState()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.settings_updates), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.app_version, vm.updates.currentVersion), style = MaterialTheme.typography.bodyMedium)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.settings_auto_update), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Switch(checked = auto, onCheckedChange = vm::setAutoUpdate)
+        }
+        if (state !is cz.audioknihy.update.UpdateState.Idle) {
+            cz.audioknihy.ui.UpdateBanner(state, onUpdate = vm::installUpdate, onLater = {})
+        } else {
+            androidx.compose.material3.FilledTonalButton(onClick = vm::checkNow, enabled = !checking, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(stringResource(if (checking) R.string.update_checking else R.string.update_check_now))
+            }
+            if (upToDate) Text(stringResource(R.string.update_up_to_date), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -110,5 +110,18 @@
     <string name="settings_connection">Server Plex</string>
     <string name="settings_library">Knihovna: %1$s</string>
     <string name="change_server">Změnit server nebo knihovnu</string>
+    <string name="settings_updates">Aktualizace</string>
+    <string name="app_version">Verze aplikace: %1$s</string>
+    <string name="settings_auto_update">Automaticky kontrolovat nové verze</string>
+    <string name="update_check_now">Zkontrolovat aktualizace</string>
+    <string name="update_checking">Kontroluji…</string>
+    <string name="update_up_to_date">Máte nejnovější verzi.</string>
+    <string name="update_available">K dispozici je verze %1$s</string>
+    <string name="update_downloading">Stahuji verzi %1$s…</string>
+    <string name="update_ready">Verze %1$s je stažená</string>
+    <string name="update_failed">Stažení aktualizace se nepovedlo.</string>
+    <string name="update_now">Aktualizovat</string>
+    <string name="update_install">Nainstalovat</string>
+    <string name="update_later">Později</string>
     <string name="sign_out">Odhlásit</string>
 </resources>

@@ -22,6 +22,7 @@ Dělaný na poslech v posteli, v autě i doma: tmavý vzhled, velká tlačítka,
 - **Označit jako dokončené / nepřehrané** – promítne se i do Plexu.
 - **Synchronizace s Plexem** – pozice se hlásí i do Plexu (při výpadku sítě se pošle později). Knihy rozposlouchané v Plexampu se po prvním přihlášení objeví v Rozposlouchaných.
 - **Ovládání odkudkoli** – notifikace, zamčená obrazovka, tlačítka na sluchátkách, Android Auto (Rozposlouchané / Knihovna, další/předchozí = kapitoly).
+- **Automatické aktualizace** – aplikace kontroluje novou verzi na GitHubu, stáhne ji a otevře instalaci (potvrdíte ji). Dá se vypnout v Nastavení.
 - **Vzhled** – tři rozvržení (Stužka, Police, Kompakt), každé s pěti barevnými vzhledy (Plátno, Půlnoc, Bordó, Noční modř, Den). Česky a anglicky.
 
 ## Požadavky

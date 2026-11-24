@@ -22,6 +22,7 @@ Built for listening in bed, in the car and at home: dark by default, big control
 - **Mark as finished / unplayed** – synced to Plex as played / unplayed.
 - **Sync with Plex** – positions are also reported to Plex (when the network is down they are sent later). Books you started in Plexamp appear in *In progress* after the first sign-in.
 - **Everywhere** – notification, lock screen, headphone buttons, Android Auto (In progress / Library, chapters on next/previous).
+- **Automatic updates** – the app checks GitHub Releases for a new version, downloads it and opens the installer (you confirm the install). Can be turned off in Settings.
 - **Appearance** – three layouts (Ribbon, Shelf, Compact), each with five colour themes (Cloth, Midnight, Oxblood, Night blue, Day). English and Czech.
 
 ## Requirements

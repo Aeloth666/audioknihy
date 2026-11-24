@@ -28,7 +28,12 @@ class HomeViewModel @Inject constructor(
     private val session: BookSession,
     private val server: ServerSession,
     private val settings: Settings,
+    private val updates: cz.audioknihy.update.UpdateManager,
 ) : ViewModel() {
+    val update = updates.state
+    fun installUpdate() = viewModelScope.launch { updates.downloadAndInstall() }
+    fun dismissUpdate() = viewModelScope.launch { updates.dismiss() }
+
 
     val sort: StateFlow<InProgressSort> = settings.inProgressSort
         .map { v -> InProgressSort.entries.firstOrNull { it.name == v } ?: InProgressSort.RECENT }
@@ -66,6 +71,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { server.client() }
+        viewModelScope.launch { updates.check() }
         refresh()
     }
 
