@@ -122,9 +122,37 @@ class AudioTap(private val capacity: Int = 2048) {
     /** Vizualizace je vidět: jen pak má smysl zvuk zpracovávat. */
     @Volatile var enabled = true
 
+    /** Snímků zapsaných od posledního vyprázdnění (skok, nová kniha). */
+    @Volatile var framesSinceBase = 0L
+        private set
+
+    /** Pozice v souboru (ms), od které se počítá [framesSinceBase]; -1 = neznámá. */
+    @Volatile var baseMs = -1L
+        private set
+
+    /** Pořadí vyprázdnění; změna = nový začátek počítání. */
+    @Volatile var flushCount = 0
+        private set
+
+    @Volatile private var pendingBase: Long? = null
+
+    /** Přehrávač právě skočil na [positionMs] (hlavní vlákno); platí pro nejbližší vyprázdnění. */
+    fun expectDiscontinuity(positionMs: Long) {
+        pendingBase = positionMs
+    }
+
+    /** Vyprázdnění zvukového řetězce (začátek přehrávání, skok): nový formát a nový začátek. */
     fun onFormat(sampleRate: Int, channels: Int) {
         this.sampleRate = sampleRate
         this.channels = channels.coerceAtLeast(1)
+        synchronized(this) {
+            filled = 0
+            write = 0
+            framesSinceBase = 0
+        }
+        baseMs = pendingBase ?: -1L
+        pendingBase = null
+        flushCount++
     }
 
     fun onPcm16(buffer: ByteBuffer) {
@@ -140,16 +168,20 @@ class AudioTap(private val capacity: Int = 2048) {
                 right[write] = r
                 write = (write + 1) % capacity
                 if (filled < capacity) filled++
+                framesSinceBase++
             }
         }
     }
 
-    fun snapshot(count: Int = capacity): AudioSnapshot = synchronized(this) {
-        val n = minOf(count, filled)
+    /** Posledních [count] vzorků, posunutých o [delayFrames] zpět (zvuk ve výstupu je napřed). */
+    fun snapshot(count: Int = capacity, delayFrames: Int = 0): AudioSnapshot = synchronized(this) {
+        val delay = delayFrames.coerceIn(0, filled)
+        val n = minOf(count, filled - delay)
         val l = FloatArray(n)
         val r = FloatArray(n)
+        val end = (write - delay + capacity) % capacity
         for (i in 0 until n) {
-            val idx = (write - n + i + capacity) % capacity
+            val idx = (end - n + i + 2 * capacity) % capacity
             l[i] = left[idx]
             r[i] = right[idx]
         }
@@ -185,5 +217,14 @@ object Stereo {
             side += s * s
         }
         return side <= mid * 0.01
+    }
+}
+
+object Latency {
+    /** O kolik ms je zvuk zapsaný do výstupu napřed před tím, co je právě slyšet. */
+    fun aheadMs(baseMs: Long, framesSinceBase: Long, sampleRate: Int, heardMs: Long): Long {
+        if (baseMs < 0 || sampleRate <= 0) return 0
+        val writtenMs = baseMs + framesSinceBase * 1000 / sampleRate
+        return (writtenMs - heardMs).coerceAtLeast(0)
     }
 }

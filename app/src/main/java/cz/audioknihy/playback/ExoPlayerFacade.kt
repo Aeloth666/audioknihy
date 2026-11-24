@@ -22,7 +22,7 @@ import java.nio.ByteBuffer
 class ExoPlayerFacade(context: Context) : PlayerFacade {
 
     /** Odbočka zvuku pro vizualizace (bez oprávnění k mikrofonu). */
-    val tap = AudioTap(2048).apply { enabled = false }
+    val tap = AudioTap(144_000).apply { enabled = false }
 
     private val renderers = object : DefaultRenderersFactory(context.applicationContext) {
         override fun buildAudioSink(
@@ -105,6 +105,7 @@ class ExoPlayerFacade(context: Context) : PlayerFacade {
                 )
                 .build()
         }
+        tap.expectDiscontinuity(positionMs)
         exo.setMediaItems(media, fileIndex, positionMs)
         exo.playbackParameters = PlaybackParameters(speed)
         exo.prepare()
@@ -116,7 +117,10 @@ class ExoPlayerFacade(context: Context) : PlayerFacade {
     }
 
     override fun pause() = exo.pause()
-    override fun seekTo(fileIndex: Int, positionMs: Long) = exo.seekTo(fileIndex, positionMs)
+    override fun seekTo(fileIndex: Int, positionMs: Long) {
+        tap.expectDiscontinuity(positionMs)
+        exo.seekTo(fileIndex, positionMs)
+    }
     override fun setSpeed(speed: Float) { exo.playbackParameters = PlaybackParameters(speed) }
     override fun setVolume(v: Float) { exo.volume = v }
 }

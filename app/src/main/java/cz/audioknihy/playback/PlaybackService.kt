@@ -53,6 +53,10 @@ class PlaybackService : MediaLibraryService() {
     private lateinit var shake: ShakeDetector
     private var shakeStop: Job? = null
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(cz.audioknihy.ui.AppLocale.wrap(newBase))
+    }
+
     override fun onCreate() {
         super.onCreate()
         facade.onEnded = { scope.launch { session.onBookEnded() } }

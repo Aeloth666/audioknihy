@@ -187,7 +187,7 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
                         .clip(androidx.compose.foundation.shape.RoundedCornerShape(5.dp)),
                 )
             } else if (vizMode != VizMode.COVER) Visualizer(
-                mode = vizMode, tap = vm.tap, color = silk, coverUrl = coverUrl, playing = s.isPlaying,
+                mode = vizMode, tap = vm.tap, color = silk, coverUrl = coverUrl, playing = s.isPlaying, heard = vm::heard,
                 modifier = Modifier.size(area).clickable { zoom = true },
             ) else CoverWithRibbon(
                 onClick = { zoom = true },

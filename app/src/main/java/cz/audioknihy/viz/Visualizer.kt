@@ -57,7 +57,13 @@ enum class VizMode(val label: Int) {
  * [color] je barva stužky knihy, [coverUrl] obal pro režim Aura.
  */
 @Composable
-fun Visualizer(mode: VizMode, tap: AudioTap, color: Color, coverUrl: String?, playing: Boolean, modifier: Modifier = Modifier) {
+fun Visualizer(
+    mode: VizMode, tap: AudioTap, color: Color, coverUrl: String?, playing: Boolean,
+    modifier: Modifier = Modifier,
+    heard: () -> Pair<Int, Long> = { 0 to -1L },
+) {
+    // Synchronizace: zvuk ve výstupu (a v Bluetooth) je napřed; měříme o kolik a kreslíme slyšený úsek.
+    val sync = remember { object { var flush = -1; var file = -1; var lagMs = -1.0 } }
     var frame by remember { mutableLongStateOf(0L) }
     LaunchedEffect(mode, playing) {
         tap.enabled = true
@@ -82,7 +88,16 @@ fun Visualizer(mode: VizMode, tap: AudioTap, color: Color, coverUrl: String?, pl
         }
         Canvas(Modifier.fillMaxSize()) {
             val t = frame / 1_000_000_000.0 // sekundy, pro pomalé pohyby
-            val snap = tap.snapshot(1024)
+            val (fileNow, posNow) = heard()
+            if (tap.flushCount != sync.flush) {
+                sync.flush = tap.flushCount; sync.file = fileNow // zpoždění výstupu se nemění, ponecháme odhad
+            }
+            if (posNow >= 0 && tap.baseMs >= 0 && fileNow == sync.file) {
+                val ahead = Latency.aheadMs(tap.baseMs, tap.framesSinceBase, tap.sampleRate, posNow).toDouble()
+                sync.lagMs = if (sync.lagMs < 0) ahead else sync.lagMs * 0.92 + ahead * 0.08
+            }
+            val delayFrames = (sync.lagMs.coerceAtLeast(0.0) * tap.sampleRate / 1000).toInt()
+            val snap = tap.snapshot(1024, delayFrames)
             val quiet = !playing || snap.left.isEmpty()
             when (mode) {
                 VizMode.WAVE -> drawWave(snap, quiet, color, gold, waveHistory)

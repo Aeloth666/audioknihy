@@ -23,6 +23,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.runtime.remember
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -91,29 +96,79 @@ fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, onChangeServer: 
         )
     }) { pad ->
         Column(
-            Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp),
+            Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            DesignPicker(AppDesign.from(designName), vm::setDesign)
-            ThemePicker(AppTheme.from(themeName), vm::setTheme)
-            Choice(stringResource(R.string.settings_skip_back), listOf(10, 15, 30, 60), (back / 1000).toInt()) { vm.setSkipBack(it * 1000L) }
-            Choice(stringResource(R.string.settings_skip_forward), listOf(15, 30, 60, 90), (fwd / 1000).toInt()) { vm.setSkipForward(it * 1000L) }
-            Choice(stringResource(R.string.settings_resume_rewind), listOf(0, 5, 10, 30), (rewind / 1000).toInt()) { vm.setRewind(it * 1000L) }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.settings_sync), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                Switch(checked = sync, onCheckedChange = vm::setSync)
+            SettingsSection(R.string.settings_theme, Icons.Filled.Palette) {
+                DesignPicker(AppDesign.from(designName), vm::setDesign)
+                ThemePicker(AppTheme.from(themeName), vm::setTheme)
+                LanguagePicker()
             }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(stringResource(R.string.settings_connection), style = MaterialTheme.typography.titleSmall)
-                server?.let { Text(stringResource(R.string.settings_server, it), style = MaterialTheme.typography.bodyMedium) }
-                section?.let { Text(stringResource(R.string.settings_library, it), style = MaterialTheme.typography.bodyMedium) }
-                androidx.compose.material3.FilledTonalButton(
-                    onClick = onChangeServer,
-                    modifier = Modifier.padding(top = 4.dp).heightIn(min = 48.dp),
-                ) { Text(stringResource(R.string.change_server)) }
+            SettingsSection(R.string.section_playback, Icons.Filled.Headphones) {
+                Choice(stringResource(R.string.settings_skip_back), listOf(10, 15, 30, 60), (back / 1000).toInt()) { vm.setSkipBack(it * 1000L) }
+                Choice(stringResource(R.string.settings_skip_forward), listOf(15, 30, 60, 90), (fwd / 1000).toInt()) { vm.setSkipForward(it * 1000L) }
+                Choice(stringResource(R.string.settings_resume_rewind), listOf(0, 5, 10, 30), (rewind / 1000).toInt()) { vm.setRewind(it * 1000L) }
             }
-            UpdateSection(vm)
-            OutlinedButton(onClick = { vm.signOut(onSignedOut) }) { Text(stringResource(R.string.sign_out)) }
+            SettingsSection(R.string.settings_connection, Icons.Filled.Dns) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    server?.let { Text(stringResource(R.string.settings_server, it), style = MaterialTheme.typography.bodyLarge) }
+                    section?.let { Text(stringResource(R.string.settings_library, it), style = MaterialTheme.typography.bodyLarge) }
+                }
+                androidx.compose.material3.FilledTonalButton(onClick = onChangeServer, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.change_server))
+                }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.settings_sync), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Switch(checked = sync, onCheckedChange = vm::setSync)
+                }
+                OutlinedButton(onClick = { vm.signOut(onSignedOut) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.sign_out))
+                }
+            }
+            SettingsSection(R.string.settings_updates, Icons.Filled.SystemUpdate) {
+                UpdateSection(vm)
+            }
+        }
+    }
+}
+
+/** Jedna skupina nastavení: ikona, nadpis a obsah na zvýrazněném podkladu. */
+@Composable
+private fun SettingsSection(title: Int, icon: androidx.compose.ui.graphics.vector.ImageVector, content: @Composable () -> Unit) {
+    androidx.compose.material3.Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.primary)
+                Text(stringResource(title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun LanguagePicker() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val current = remember { cz.audioknihy.ui.AppLocale.get(ctx) }
+    Column {
+        Text(stringResource(R.string.settings_language), style = MaterialTheme.typography.titleSmall)
+        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("" to R.string.lang_system, "cs" to R.string.lang_cs, "en" to R.string.lang_en).forEach { (tag, label) ->
+                FilterChip(
+                    selected = tag == current,
+                    onClick = {
+                        if (tag != current) {
+                            cz.audioknihy.ui.AppLocale.set(ctx, tag)
+                            (ctx as? android.app.Activity)?.recreate()
+                        }
+                    },
+                    label = { Text(stringResource(label)) },
+                )
+            }
         }
     }
 }
@@ -133,7 +188,7 @@ private fun Choice(title: String, options: List<Int>, selected: Int, onPick: (In
 @Composable
 private fun ThemePicker(current: AppTheme, onPick: (AppTheme) -> Unit) {
     Column {
-        Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.settings_colors), style = MaterialTheme.typography.titleSmall)
         Row(
             Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -204,7 +259,6 @@ private fun UpdateSection(vm: SettingsViewModel) {
     val upToDate by vm.upToDate.collectAsState()
     val state by vm.updates.state.collectAsState()
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.settings_updates), style = MaterialTheme.typography.titleSmall)
         Text(stringResource(R.string.app_version, vm.updates.currentVersion), style = MaterialTheme.typography.bodyMedium)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.settings_auto_update), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))

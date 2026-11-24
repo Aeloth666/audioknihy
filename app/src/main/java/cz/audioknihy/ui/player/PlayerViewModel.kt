@@ -20,8 +20,10 @@ class PlayerViewModel @Inject constructor(
     private val session: BookSession,
     private val server: ServerSession,
     private val settings: Settings,
-    facade: cz.audioknihy.playback.ExoPlayerFacade,
+    private val facade: cz.audioknihy.playback.ExoPlayerFacade,
 ) : ViewModel() {
+    /** Právě slyšená pozice (soubor, ms) – pro synchronizaci vizualizace. */
+    fun heard(): Pair<Int, Long> = facade.fileIndex to facade.positionMs
     val tap = facade.tap
     val viz: StateFlow<cz.audioknihy.viz.VizMode> = settings.visualizer.map { cz.audioknihy.viz.VizMode.from(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, cz.audioknihy.viz.VizMode.COVER)

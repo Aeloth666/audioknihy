@@ -122,5 +122,11 @@
     <string name="update_now">Update</string>
     <string name="update_install">Install</string>
     <string name="update_later">Later</string>
+    <string name="settings_colors">Colours</string>
+    <string name="section_playback">Playback</string>
+    <string name="settings_language">Language</string>
+    <string name="lang_system">System default</string>
+    <string name="lang_cs">Čeština</string>
+    <string name="lang_en">English</string>
     <string name="sign_out">Sign out</string>
 </resources>

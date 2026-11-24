@@ -123,5 +123,11 @@
     <string name="update_now">Aktualizovat</string>
     <string name="update_install">Nainstalovat</string>
     <string name="update_later">Později</string>
+    <string name="settings_colors">Barvy</string>
+    <string name="section_playback">Přehrávání</string>
+    <string name="settings_language">Jazyk</string>
+    <string name="lang_system">Podle telefonu</string>
+    <string name="lang_cs">Čeština</string>
+    <string name="lang_en">English</string>
     <string name="sign_out">Odhlásit</string>
 </resources>

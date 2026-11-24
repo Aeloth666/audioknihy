@@ -30,6 +30,10 @@ class MainActivity : ComponentActivity() {
 
     private var controller: ListenableFuture<MediaController>? = null
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(AppLocale.wrap(newBase))
+    }
+
     private val notificationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {

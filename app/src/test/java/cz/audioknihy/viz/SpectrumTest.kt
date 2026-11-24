@@ -105,4 +105,39 @@ class SpectrumTest {
         val r = FloatArray(100) { -l[it] }
         assertEquals(false, Stereo.isMono(l, r))
     }
+
+    private fun mono(tap: AudioTap, values: List<Int>) {
+        val buf = ByteBuffer.allocate(values.size * 2).order(ByteOrder.LITTLE_ENDIAN)
+        values.forEach { buf.putShort(it.toShort()) }
+        buf.flip()
+        tap.onPcm16(buf)
+    }
+
+    @Test
+    fun snapshot_with_delay_returns_older_samples() {
+        val tap = AudioTap(capacity = 10)
+        tap.onFormat(1000, 1)
+        mono(tap, (1..8).map { it * 1000 })
+        val snap = tap.snapshot(count = 3, delayFrames = 2)
+        assertArrayEquals(floatArrayOf(4000f, 5000f, 6000f).map { it / 32768f }.toFloatArray(), snap.left, 0.0001f)
+    }
+
+    @Test
+    fun frames_since_flush_are_counted_and_reset() {
+        val tap = AudioTap(capacity = 10)
+        tap.expectDiscontinuity(positionMs = 30_000)
+        tap.onFormat(1000, 1)
+        mono(tap, listOf(1, 2, 3, 4))
+        assertEquals(4L, tap.framesSinceBase)
+        assertEquals(30_000L, tap.baseMs)
+        tap.onFormat(1000, 1)
+        assertEquals(0L, tap.framesSinceBase)
+    }
+
+    @Test
+    fun latency_is_written_time_minus_heard_position() {
+        // od pozice 30 s zapsáno 1,5 s zvuku, slyšet je 31,2 s → zvuk je 300 ms napřed
+        assertEquals(300L, Latency.aheadMs(baseMs = 30_000, framesSinceBase = 1_500, sampleRate = 1000, heardMs = 31_200))
+        assertEquals(0L, Latency.aheadMs(baseMs = 30_000, framesSinceBase = 100, sampleRate = 1000, heardMs = 31_200))
+    }
 }
