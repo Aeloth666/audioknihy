@@ -16,7 +16,7 @@ import org.junit.Test
 class CoverSearchTest {
     private val server = MockWebServer().apply { start() }
     private val base = server.url("/").toString().trimEnd('/')
-    private val search = CoverSearch(OkHttpClient(), googleBase = "$base/g", openLibraryBase = "$base/ol", coversBase = "https://covers.test", itunesBase = "$base/it")
+    private val search = CoverSearch(OkHttpClient(), googleBase = "$base/g", openLibraryBase = "$base/ol", coversBase = "https://covers.test", itunesBase = "$base/it", databazeKnihBase = "$base/dbk")
 
     @After fun tearDown() = server.shutdown()
 
@@ -148,6 +148,88 @@ class CoverSearchTest {
             }
         }
         assertEquals("https://covers.test/a/olid/OL123A-M.jpg?default=false", search.authorPhoto("Frank Herbert"))
+    }
+    private fun dbkHit(id: String, name: String, title: String, pozn: String) = """
+        <p class='new'>
+        <a href="/prehled-knihy/$name-$id"><picture>
+        <source srcset="$base/dbk/img/books/56_/$id/$name.webp?v=1" type="image/webp">
+        <img src="$base/dbk/img/books/56_/$id/$name.jpg?v=1" alt="Obálka knihy $title" title="$title" class="img_39_left odtopm"  />
+        </picture></a>
+        <a class='new' type='book' href='/prehled-knihy/$name-$id'>$title</a>
+        <br /><span class='pozn'>
+                2025,
+            $pozn
+        </span>
+        <div class='clear'></div><hr /></p>
+    """
+
+    private fun dbkPage() = "<html><body>" +
+        dbkHit("1", "technomagicka-swingers-party", "Technomagická swingers party", "Jan Novák") +
+        dbkHit("569477", "kyberpunkova-swingers-party", "Kyberpunková swingers party", "František Kotleta (p)") +
+        "</body></html>"
+
+    @Test
+    fun czech_book_database_matches_author_and_prefers_large_cover() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/dbk/vyhledavani/knihy") -> MockResponse().setBody(dbkPage())
+                request.path!!.startsWith("/dbk/img/books/56_/569477/bmid_kyberpunkova-swingers-party.jpg") ->
+                    MockResponse().setHeader("Content-Type", "image/jpeg").setBody("jpg")
+                request.path!!.startsWith("/it/") -> MockResponse().setBody("""{"resultCount":0,"results":[]}""")
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        assertEquals(
+            "$base/dbk/img/books/56_/569477/bmid_kyberpunkova-swingers-party.jpg",
+            search.bookCover("Kyberpunková swingers party", "František Kotleta"),
+        )
+        val q = List(server.requestCount) { server.takeRequest() }.first { it.path!!.startsWith("/dbk/vyhledavani") }.requestUrl!!.queryParameter("q")
+        assertEquals("Kyberpunková swingers party", q)
+    }
+
+    @Test
+    fun czech_book_database_falls_back_to_small_cover() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/dbk/vyhledavani/knihy") -> MockResponse().setBody(dbkPage())
+                request.path!!.startsWith("/it/") -> MockResponse().setBody("""{"resultCount":0,"results":[]}""")
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        assertEquals(
+            "$base/dbk/img/books/56_/569477/kyberpunkova-swingers-party.jpg",
+            search.bookCover("Kyberpunková swingers party", "František Kotleta"),
+        )
+    }
+
+    @Test
+    fun czech_book_database_ignores_books_by_other_authors() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/dbk/vyhledavani/knihy") -> MockResponse().setBody(dbkPage())
+                request.path!!.startsWith("/it/") -> MockResponse().setBody("""{"resultCount":0,"results":[]}""")
+                else -> MockResponse().setBody("{}")
+            }
+        }
+        assertNull(search.bookCover("Swingers party", "Karel Čapek"))
+    }
+
+    @Test
+    fun candidates_list_matching_author_first() = runTest {
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest) = when {
+                request.path!!.startsWith("/dbk/vyhledavani/knihy") -> MockResponse().setBody(dbkPage())
+                request.path!!.startsWith("/it/") -> MockResponse().setBody("""{"resultCount":0,"results":[]}""")
+                else -> MockResponse().setResponseCode(404)
+            }
+        }
+        assertEquals(
+            listOf(
+                "$base/dbk/img/books/56_/569477/kyberpunkova-swingers-party.jpg",
+                "$base/dbk/img/books/56_/1/technomagicka-swingers-party.jpg",
+            ),
+            search.candidates("swingers party", "Kotleta"),
+        )
     }
 }
 
