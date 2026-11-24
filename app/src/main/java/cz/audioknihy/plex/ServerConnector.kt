@@ -18,6 +18,11 @@ class ServerConnector(
         .connectTimeout(3, TimeUnit.SECONDS).readTimeout(3, TimeUnit.SECONDS).callTimeout(4, TimeUnit.SECONDS)
         .build()
 
+    /** Vzdálené spojení a relay přes mobilní data potřebují na TLS víc času. */
+    private val probeRemote = http.newBuilder()
+        .connectTimeout(6, TimeUnit.SECONDS).readTimeout(6, TimeUnit.SECONDS).callTimeout(8, TimeUnit.SECONDS)
+        .build()
+
     suspend fun servers(userToken: String): List<PlexServer> {
         val req = headers.apply(Request.Builder().url("$plexTvUrl/api/v2/resources?includeHttps=1&includeRelay=1"), userToken).build()
         val list = PlexJson.resources.fromJson(http.fetch(req).decodeToString()).orEmpty()
@@ -52,13 +57,14 @@ class ServerConnector(
         for (c in ordered) {
             val uri = c.uri.trimEnd('/')
             val ok = try {
-                probe.fetch(headers.apply(Request.Builder().url("$uri/identity"), server.accessToken).build())
+                (if (c.local) probe else probeRemote).fetch(headers.apply(Request.Builder().url("$uri/identity"), server.accessToken).build())
                 true
             } catch (e: IOException) {
                 false
             } catch (e: IllegalArgumentException) {
                 false
             }
+            android.util.Log.i("Audioknihy", "zkouším $uri → ${if (ok) "OK" else "nedostupné"}")
             if (ok) return uri
         }
         return null

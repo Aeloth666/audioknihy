@@ -148,7 +148,7 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
         val chStart = chapter?.startMs ?: 0
         val chEnd = chapter?.endMs ?: book.files.getOrNull(s.fileIndex)?.durationMs ?: 0
         Column(
-            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
+            Modifier.padding(pad).fillMaxSize().padding(horizontal = 24.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -163,6 +163,12 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
                 vm.tap.enabled = vizMode != VizMode.COVER
                 onDispose { vm.tap.enabled = false }
             }
+            // Obal / vizualizace zabere zbylé místo; obrazovka se neposouvá.
+            androidx.compose.foundation.layout.BoxWithConstraints(
+                Modifier.weight(1f).fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+            val area = if (maxWidth < maxHeight) maxWidth * 0.9f else maxHeight
             if (vizMode == VizMode.COVER && design == AppDesign.COMPACT) {
                 // Kompakt: místo obalu velký zbývající čas a široká stužka průběhu
                 Text(
@@ -182,23 +188,26 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
                 )
             } else if (vizMode != VizMode.COVER) Visualizer(
                 mode = vizMode, tap = vm.tap, color = silk, coverUrl = coverUrl, playing = s.isPlaying,
-                modifier = Modifier.padding(top = 12.dp).size(side).clickable { zoom = true },
+                modifier = Modifier.size(area).clickable { zoom = true },
             ) else CoverWithRibbon(
                 onClick = { zoom = true },
-                maxHeight = 340.dp,
-                width = (androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp * 0.82f).dp,
+                maxHeight = maxHeight - 8.dp,
+                width = area,
                 url = coverUrl,
                 fraction = bookFraction,
                 color = silk,
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = 8.dp),
                 description = stringResource(R.string.progress_percent, (bookFraction * 100).toInt()),
             )
-            Text(book.title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+            }
+            Text(book.title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (chapter != null) {
                 Text(
-                    chapter.title + "  ·  " + stringResource(R.string.chapter_of, s.chapterIndex + 1, s.chapters.chapters.size),
+                    cz.audioknihy.chapters.ChapterLabels.cleanTitle(chapter.title).ifEmpty { "" } + "  ·  " + stringResource(R.string.chapter_of, s.chapterIndex + 1, s.chapters.chapters.size),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
@@ -271,7 +280,7 @@ fun PlayerScreen(onBack: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
                     Text(" " + sleepLabel(sleep, vm))
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(4.dp))
         }
     }
 

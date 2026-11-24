@@ -12,6 +12,13 @@ object BookGrouper {
 
     private class Placed(val track: PlexTrack, val disc: Int, val fileName: String)
 
+    /** Číslo CD podle složky souboru (např. „CD 2“), jinak null. */
+    fun discOf(filePath: String): Int? {
+        val sep = if (filePath.contains('/')) '/' else '\\'
+        val dirName = filePath.substringBeforeLast(sep, "").substringAfterLast(sep)
+        return CD_REGEX.matchEntire(dirName.trim())?.groupValues?.get(2)?.toInt()
+    }
+
     fun group(tracks: List<PlexTrack>): List<Book> {
         val byBook = LinkedHashMap<String, MutableList<Placed>>()
         for (t in tracks) {

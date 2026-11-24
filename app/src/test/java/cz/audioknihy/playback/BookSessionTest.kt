@@ -417,4 +417,36 @@ class BookSessionTest {
         assertTrue(player.isPlaying)
         assertEquals(0L, dao.get("B")!!.lastPlayedAt)
     }
+
+    @Test
+    fun reload_sources_keeps_position_and_uses_new_address() = runTest {
+        var base = "home"
+        val s = BookSession(player, dao, chapters, reporter, prefs, { "$base:" + it.ratingKey }, { now }, timer)
+        s.open(a)
+        player.fileIndex = 1; player.positionMs = 123_000
+        base = "remote"
+        s.reloadSources()
+        assertEquals("load:A-0:1:123000:1.0", log.last { it.startsWith("load") })
+        assertTrue(player.loadedUris.all { it.startsWith("remote:") })
+        assertTrue(player.isPlaying)
+    }
+
+    @Test
+    fun reload_sources_keeps_paused_state() = runTest {
+        session.open(a)
+        session.pause()
+        session.reloadSources()
+        assertFalse(player.isPlaying)
+    }
+
+    @Test
+    fun open_checks_connection_first() = runTest {
+        val events = mutableListOf<String>()
+        val s = BookSession(
+            player, dao, chapters, reporter, prefs, { events += "uri"; "u" }, { now }, timer,
+            beforeOpen = { events += "check" },
+        )
+        s.open(a)
+        assertEquals("check", events.first())
+    }
 }

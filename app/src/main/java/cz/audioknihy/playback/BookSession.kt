@@ -62,6 +62,8 @@ class BookSession(
     private val fire: (suspend () -> Unit) -> Unit = { block -> runBlocking { block() } },
     /** Aktuální pozice knihy na serveru (při otevření), null = nevíme. */
     private val serverCheck: suspend (Book) -> ServerPosition? = { null },
+    /** Před otevřením knihy: ověří spojení se serverem (doma × venku). */
+    private val beforeOpen: suspend () -> Unit = {},
 ) {
     private val mutex = Mutex()
     private val _state = MutableStateFlow(SessionState())
@@ -83,6 +85,7 @@ class BookSession(
     val isCurrentFinished: Boolean get() = currentFinished
 
     suspend fun open(book: Book, startAt: StartAt = StartAt.Saved) {
+        runCatching { beforeOpen() }
         // Pozice ze serveru (jiné zařízení) se zjišťuje mimo zámek a s krátkým limitem.
         val server = if (startAt == StartAt.Saved) {
             runCatching { withTimeoutOrNull(SERVER_CHECK_TIMEOUT_MS) { serverCheck(book) } }.getOrNull()
@@ -134,6 +137,22 @@ class BookSession(
                 publish()
             }
         }
+    }
+
+    /**
+     * Znovu načte soubory aktuální knihy (nová adresa serveru, např. doma → venku)
+     * na stejném místě a ve stejném stavu přehrávání.
+     */
+    suspend fun reloadSources() = mutex.withLock {
+        val book = _current.value ?: return@withLock
+        if (currentFinished) return@withLock
+        val fi = player.fileIndex.coerceIn(0, book.files.lastIndex)
+        val pos = player.positionMs.coerceAtLeast(0)
+        val wasPlaying = player.isPlaying
+        val items = book.files.map { t -> PlayItem(t.ratingKey, uris.uri(t), t.title, book.title, book.author, artwork(book)) }
+        player.load(items, fi, pos, speed)
+        if (wasPlaying) player.play()
+        publish()
     }
 
     private suspend fun savedStart(book: Book, saved: BookProgress?): Pair<Int, Long> {

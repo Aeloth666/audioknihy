@@ -66,10 +66,17 @@ class ExoPlayerFacade(context: Context) : PlayerFacade {
     /** Přehrávání se zastavilo odjinud (sluchátka, notifikace, výpadek zvuku). */
     var onStoppedPlaying: () -> Unit = {}
 
+    /** Chyba přehrávání (typicky nedostupný server po změně sítě). */
+    var onError: (androidx.media3.common.PlaybackException) -> Unit = {}
+
     init {
         exo.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_ENDED) onEnded()
+            }
+
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                onError(error)
             }
 
             override fun onIsPlayingChanged(isPlaying: Boolean) {

@@ -57,6 +57,8 @@ class PlaybackService : MediaLibraryService() {
         super.onCreate()
         facade.onEnded = { scope.launch { session.onBookEnded() } }
         facade.onStoppedPlaying = { scope.launch { session.save("stopped") } }
+        facade.onError = { error -> scope.launch { recoverFromError(error) } }
+        registerNetworkWatch()
 
         val player = AudiobookPlayer(
             facade.exo, scope, session,
@@ -127,6 +129,37 @@ class PlaybackService : MediaLibraryService() {
         )
     }
 
+    private var lastRecovery = 0L
+
+    /** Chyba přehrávání: najít funkční spojení (doma/venku) a načíst soubory znovu na stejném místě. */
+    private suspend fun recoverFromError(error: androidx.media3.common.PlaybackException) {
+        android.util.Log.w("Audioknihy", "chyba přehrávání: ${error.errorCodeName}", error)
+        val now = System.currentTimeMillis()
+        if (now - lastRecovery < 15_000) return
+        lastRecovery = now
+        server.invalidate()
+        if (server.ensureReachable()) session.reloadSources()
+    }
+
+    private var networkCallback: android.net.ConnectivityManager.NetworkCallback? = null
+
+    /** Při změně sítě (Wi-Fi ↔ mobilní data) hned ověří spojení se serverem. */
+    private fun registerNetworkWatch() {
+        val cm = getSystemService(android.net.ConnectivityManager::class.java) ?: return
+        val cb = object : android.net.ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                scope.launch {
+                    server.invalidate()
+                    val before = server.client()?.let { it.streamUrl("") }
+                    if (server.ensureReachable() && server.client()?.streamUrl("") != before && session.current.value != null) {
+                        session.reloadSources()
+                    }
+                }
+            }
+        }
+        runCatching { cm.registerDefaultNetworkCallback(cb) }.onSuccess { networkCallback = cb }
+    }
+
     private suspend fun resumeLastBook() {
         val last = progress.inProgress().first().firstOrNull() ?: return
         library.book(last.bookId)?.let { session.open(it) }
@@ -148,6 +181,7 @@ class PlaybackService : MediaLibraryService() {
     override fun onDestroy() {
         saveNow()
         shake.stop()
+        networkCallback?.let { cb -> runCatching { getSystemService(android.net.ConnectivityManager::class.java)?.unregisterNetworkCallback(cb) } }
         mediaSession.release()
         scope.cancel()
         super.onDestroy()

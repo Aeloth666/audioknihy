@@ -136,6 +136,7 @@ object AppModule {
         sleepTimer = timer,
         artwork = { book -> covers.immediate(book, 600) },
         fire = { block -> scope.launch { block() } },
+        beforeOpen = { server.ensureReachable() },
         serverCheck = { book ->
             val fresh = server.get()?.source?.tracksMetadata(book.files.map { it.ratingKey })?.associateBy { it.ratingKey }
             fresh?.let { m -> ProgressResolver.serverPosition(book.copy(files = book.files.map { m[it.ratingKey] ?: it })) }

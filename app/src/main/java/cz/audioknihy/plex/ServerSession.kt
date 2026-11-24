@@ -8,6 +8,8 @@ import okhttp3.OkHttpClient
  * Aktuálně vybraný server podle uloženého nastavení. Umí přepnout spojení
  * (doma místní adresa, venku vzdálený přístup) přes [ensureReachable].
  */
+private const val TAG = "Audioknihy"
+
 class ServerSession(
     private val settings: Settings,
     private val http: OkHttpClient,
@@ -39,23 +41,41 @@ class ServerSession(
     /** URL obrázku přes naposledy použitého klienta (pro Compose, bez čekání). */
     fun imageUrl(thumb: String?, sizePx: Int): String? = thumb?.let { cached?.third?.imageUrl(it, sizePx) }
 
+    @Volatile private var lastOk = 0L
+
+    /** Zapomene poslední úspěšné ověření (změna sítě, chyba přehrávání). */
+    fun invalidate() { lastOk = 0L }
+
     /** Ověří, že uložené spojení funguje; jinak najde jiné (místní/vzdálené/relay). */
     suspend fun ensureReachable(): Boolean {
         val uri = settings.serverUri.first() ?: return false
         val token = settings.serverToken.first() ?: return false
+        if (System.currentTimeMillis() - lastOk < 30_000) return true
         if (connector.isReachable(uri, token)) {
             client()
+            lastOk = System.currentTimeMillis()
             return true
         }
+        android.util.Log.i(TAG, "uložené spojení nedostupné: $uri – hledám jiné")
         return reconnect()
     }
 
     suspend fun reconnect(): Boolean {
         val userToken = settings.plexUserToken.first() ?: return false
         val serverId = settings.serverId.first() ?: return false
-        val server = runCatching { connector.servers(userToken) }.getOrNull()
-            ?.firstOrNull { it.clientId == serverId } ?: return false
-        val uri = connector.bestConnection(server) ?: return false
+        val servers = runCatching { connector.servers(userToken) }
+            .onFailure { android.util.Log.w(TAG, "plex.tv resources selhalo", it) }.getOrNull()
+        val server = servers?.firstOrNull { it.clientId == serverId } ?: run {
+            android.util.Log.w(TAG, "server nenalezen mezi ${servers?.size} servery")
+            return false
+        }
+        android.util.Log.i(TAG, "spojení: " + server.connections.joinToString { "${it.uri} local=${it.local} relay=${it.relay}" })
+        val uri = connector.bestConnection(server) ?: run {
+            android.util.Log.w(TAG, "žádné spojení neodpovědělo")
+            return false
+        }
+        android.util.Log.i(TAG, "nové spojení: $uri")
+        lastOk = System.currentTimeMillis()
         settings.setServer(server.clientId, server.name, uri, server.accessToken)
         client()
         return true

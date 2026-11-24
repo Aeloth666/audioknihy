@@ -52,7 +52,7 @@ fun MiniPlayer(onOpen: () -> Unit, vm: PlayerViewModel = hiltViewModel()) {
             CoverWithRibbon(rememberCoverUrl(book, 200), fraction, Silk.forBook(book.id), Modifier, width = 48.dp, maxHeight = 64.dp)
             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(book.title, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium)
-                Text(s.chapter?.title.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
+                Text(s.chapter?.title?.let { cz.audioknihy.chapters.ChapterLabels.cleanTitle(it) }.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
             }
             val back by vm.skipBackSec.collectAsStateWithLifecycle()
             IconButton(onClick = { vm.skipBack() }, Modifier.size(52.dp)) {

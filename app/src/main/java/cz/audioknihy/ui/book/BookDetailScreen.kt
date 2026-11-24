@@ -180,24 +180,36 @@ fun BookDetailScreen(onBack: () -> Unit, onOpenPlayer: () -> Unit, vm: BookDetai
                     modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 4.dp),
                 )
             }
-            itemsIndexed(chapters) { i, ch ->
-                val current = progress?.let { p -> !p.finished && p.fileIndex == ch.fileIndex && p.positionMs in ch.startMs until ch.endMs } == true
-                ListItem(
-                    leadingContent = {
-                        Box(Modifier.width(12.dp).height(28.dp)) {
-                            if (current) Ribbon(1f, Silk.forBook(b.id), Modifier.height(28.dp), width = 10.dp)
-                        }
-                    },
-                    headlineContent = {
-                        Text(
-                            if (ch.title.firstOrNull()?.isDigit() == true) ch.title else "${i + 1}. ${ch.title}",
-                            fontWeight = if (current) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            val rows = cz.audioknihy.chapters.ChapterLabels.rows(b, chapters)
+            items(rows.size) { r ->
+                when (val row = rows[r]) {
+                    is cz.audioknihy.chapters.ChapterRow.Header -> Text(
+                        row.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
+                    )
+                    is cz.audioknihy.chapters.ChapterRow.Item -> {
+                        val ch = chapters[row.chapterIndex]
+                        val current = progress?.let { p -> !p.finished && p.fileIndex == ch.fileIndex && p.positionMs in ch.startMs until ch.endMs } == true
+                        ListItem(
+                            leadingContent = {
+                                Box(Modifier.width(12.dp).height(28.dp)) {
+                                    if (current) Ribbon(1f, Silk.forBook(b.id), Modifier.height(28.dp), width = 10.dp)
+                                }
+                            },
+                            headlineContent = {
+                                Text(
+                                    row.label,
+                                    fontWeight = if (current) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            trailingContent = { Text(TimeFormat.clock(ch.endMs - ch.startMs), color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                            modifier = Modifier.clickable { vm.play(StartAt.AtChapter(ch)); onOpenPlayer() },
                         )
-                    },
-                    trailingContent = { Text(TimeFormat.clock(ch.endMs - ch.startMs), color = MaterialTheme.colorScheme.onSurfaceVariant) },
-                    modifier = Modifier.clickable { vm.play(StartAt.AtChapter(ch)); onOpenPlayer() },
-                )
+                    }
+                }
             }
         }
     }
