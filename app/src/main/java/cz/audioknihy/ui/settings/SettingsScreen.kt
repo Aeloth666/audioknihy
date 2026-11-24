@@ -17,6 +17,7 @@ import cz.audioknihy.ui.theme.AppTheme
 import cz.audioknihy.ui.theme.AppDesign
 import cz.audioknihy.ui.theme.Silk
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -62,7 +63,8 @@ class SettingsViewModel @Inject constructor(val settings: Settings) : ViewModel(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, onChangeServer: () -> Unit = {}, vm: SettingsViewModel = hiltViewModel()) {
+    val section by vm.settings.sectionTitle.collectAsState(null)
     val back by vm.settings.skipBackMs.collectAsState(Settings.DEFAULT_SKIP_BACK)
     val fwd by vm.settings.skipForwardMs.collectAsState(Settings.DEFAULT_SKIP_FORWARD)
     val rewind by vm.settings.resumeRewindMs.collectAsState(Settings.DEFAULT_RESUME_REWIND)
@@ -89,7 +91,15 @@ fun SettingsScreen(onBack: () -> Unit, onSignedOut: () -> Unit, vm: SettingsView
                 Text(stringResource(R.string.settings_sync), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
                 Switch(checked = sync, onCheckedChange = vm::setSync)
             }
-            server?.let { Text(stringResource(R.string.settings_server, it), style = MaterialTheme.typography.bodyMedium) }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(stringResource(R.string.settings_connection), style = MaterialTheme.typography.titleSmall)
+                server?.let { Text(stringResource(R.string.settings_server, it), style = MaterialTheme.typography.bodyMedium) }
+                section?.let { Text(stringResource(R.string.settings_library, it), style = MaterialTheme.typography.bodyMedium) }
+                androidx.compose.material3.FilledTonalButton(
+                    onClick = onChangeServer,
+                    modifier = Modifier.padding(top = 4.dp).heightIn(min = 48.dp),
+                ) { Text(stringResource(R.string.change_server)) }
+            }
             OutlinedButton(onClick = { vm.signOut(onSignedOut) }) { Text(stringResource(R.string.sign_out)) }
         }
     }

@@ -71,7 +71,11 @@ fun AppNav(settings: Settings, nav: NavHostController = rememberNavController())
         }
         composable(Routes.PLAYER) { PlayerScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { nav.popBackStack() }, onSignedOut = { goClear(Routes.LOGIN) })
+            SettingsScreen(
+                onBack = { nav.popBackStack() },
+                onSignedOut = { goClear(Routes.LOGIN) },
+                onChangeServer = { nav.navigate(Routes.SETUP) },
+            )
         }
     }
 }

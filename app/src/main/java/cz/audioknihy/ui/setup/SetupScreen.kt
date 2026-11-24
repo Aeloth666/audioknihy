@@ -81,6 +81,7 @@ class SetupViewModel @Inject constructor(
                 return@launch
             }
             settings.setServer(s.clientId, s.name, uri, s.accessToken)
+            server.invalidate()
             val sections = runCatching { server.client()!!.musicSections() }.getOrNull()
             _state.value = when {
                 sections == null -> SetupState.Error(R.string.setup_no_connection)
@@ -93,7 +94,7 @@ class SetupViewModel @Inject constructor(
     fun pickSection(section: MusicSection) {
         _state.value = SetupState.Busy(R.string.loading_library)
         viewModelScope.launch {
-            settings.setSectionKey(section.key)
+            settings.setSection(section.key, section.title)
             _state.value = if (library.refresh().isSuccess) SetupState.Done else SetupState.Error(R.string.setup_no_connection)
         }
     }

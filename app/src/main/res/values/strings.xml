@@ -106,5 +106,8 @@
     <string name="design_shelf_desc">Large covers in a grid, library as shelves, player with the cover as background</string>
     <string name="design_compact">Compact</string>
     <string name="design_compact_desc">Text and thin lines only, large type – for the car and the dark</string>
+    <string name="settings_connection">Plex server</string>
+    <string name="settings_library">Library: %1$s</string>
+    <string name="change_server">Change server or library</string>
     <string name="sign_out">Sign out</string>
 </resources>

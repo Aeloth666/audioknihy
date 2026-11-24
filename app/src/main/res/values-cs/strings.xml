@@ -107,5 +107,8 @@
     <string name="design_shelf_desc">Velké obaly v mřížce, knihovna jako police, přehrávač s obalem v pozadí</string>
     <string name="design_compact">Kompakt</string>
     <string name="design_compact_desc">Jen text a tenké linky, velké písmo – do auta a do tmy</string>
+    <string name="settings_connection">Server Plex</string>
+    <string name="settings_library">Knihovna: %1$s</string>
+    <string name="change_server">Změnit server nebo knihovnu</string>
     <string name="sign_out">Odhlásit</string>
 </resources>

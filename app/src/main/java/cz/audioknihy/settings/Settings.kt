@@ -30,6 +30,7 @@ class Settings(context: Context) {
         val serverUri = stringPreferencesKey("server_uri")
         val serverToken = stringPreferencesKey("server_token")
         val sectionKey = stringPreferencesKey("section_key")
+        val sectionTitle = stringPreferencesKey("section_title")
         val inProgressSort = stringPreferencesKey("in_progress_sort")
         val theme = stringPreferencesKey("theme")
         val viz = stringPreferencesKey("visualizer")
@@ -82,6 +83,8 @@ class Settings(context: Context) {
 
     suspend fun setServerUri(uri: String) = store.edit { it[K.serverUri] = uri }
     suspend fun setSectionKey(v: String) = store.edit { it[K.sectionKey] = v }
+    suspend fun setSection(key: String, title: String) = store.edit { it[K.sectionKey] = key; it[K.sectionTitle] = title }
+    val sectionTitle: Flow<String?> = store.data.map { it[K.sectionTitle] }
 
     suspend fun signOut() = store.edit {
         it.remove(K.userToken); it.remove(K.serverId); it.remove(K.serverName)
